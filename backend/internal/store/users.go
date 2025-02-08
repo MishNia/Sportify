@@ -14,7 +14,7 @@ var (
 type User struct {
 	ID        int64  `json:"id"`
 	Email     string `json:"email"`
-	Password  string `json:"password"`
+	Password  string `json:"-"`//makes sure we don't send password in responses
 	CreatedAt string `json:"created_at"`
 }
 
@@ -57,7 +57,7 @@ func (s *UserStore) Create(ctx context.Context, user *User) error {
 
 func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 	query := `
-		SELECT users.id, username, email, password, created_at, roles.*
+		SELECT users.id, email, password, created_at, roles.*
 		FROM users
 		JOIN roles ON (users.role_id = roles.id)
 		WHERE users.id = $1 AND is_active = true
@@ -91,7 +91,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, username, email, password, created_at FROM users
+		SELECT id, email, password, created_at FROM users
 		WHERE email = $1 AND is_active = true
 	`
 
