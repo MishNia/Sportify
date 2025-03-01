@@ -91,3 +91,49 @@ func (s *ProfileStore) GetByEmail(ctx context.Context, email string) (*Profile, 
 
 	return profile, nil
 }
+
+func (s *ProfileStore) Update(ctx context.Context, profile *Profile) error {
+	log.Println("Updating profile")
+	query := `
+		UPDATE profile
+		SET 
+			first_name = COALESCE($2, first_name),
+			last_name = COALESCE($3, last_name),
+			age = COALESCE($4, age),
+			gender = COALESCE($5, gender),
+			sport_preference = COALESCE($6, sport_preference),
+			updated_at = NOW()
+		WHERE email = $1
+		RETURNING updated_at;
+	`
+
+	ctx, cancel := context.WithTimeout(ctx, QueryTimeoutDuration)
+	defer cancel()
+
+	err := s.db.QueryRowContext(
+		ctx,
+		query,
+		profile.Email,
+		profile.FirstName,
+		profile.LastName,
+		profile.Age,
+		profile.Gender,
+		pq.Array(profile.SportPreference),
+	).Scan(
+		&profile.CreatedAt,
+	)
+
+	if err != nil {
+		switch {
+		case err.Error() == `pq: key value for constraint "email" does not exist`:
+			return ErrEmailDoesNotExist
+		default:
+			log.Println(err.Error())
+			return err
+		}
+	}
+
+	log.Println("Successfully updated user profile")
+
+	return nil
+}

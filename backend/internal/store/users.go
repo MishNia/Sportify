@@ -11,6 +11,7 @@ import (
 var (
 	ErrDuplicateEmail    = errors.New("a user with that email already exists")
 	ErrDuplicateUsername = errors.New("a user with that username already exists")
+	ErrEmailDoesNotExist = errors.New("a user with that email does not exist")
 )
 
 type User struct {

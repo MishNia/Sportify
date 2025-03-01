@@ -74,6 +74,8 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Post("/profile", app.createUserProfileHandler)
+
+		r.Put("/profile", app.updateUserProfileHandler)
 	})
 
 	return r

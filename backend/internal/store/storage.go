@@ -22,6 +22,7 @@ type Storage struct {
 	Profile interface {
 		GetByEmail(context.Context, string) (*Profile, error)
 		Create(context.Context, *Profile) error
+		Update(context.Context, *Profile) error
 	}
 }
 

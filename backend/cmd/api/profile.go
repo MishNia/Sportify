@@ -77,3 +77,59 @@ func (app *application) createUserProfileHandler(w http.ResponseWriter, r *http.
 		app.internalServerError(w, r, errCreate)
 	}
 }
+
+func (app *application) updateUserProfileHandler(w http.ResponseWriter, r *http.Request) {
+	var payload ProfilePayload
+
+	if err := readJSON(w, r, &payload); err != nil {
+		log.Println(err.Error())
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	log.Println("Received profile update request")
+
+	ctx := r.Context()
+
+	// Fetch existing profile
+	profile, err := app.store.Profile.GetByEmail(ctx, payload.Email)
+	if err != nil {
+		if err == store.ErrNotFound {
+			log.Printf("Profile for user %s not found", payload.Email)
+			app.notFoundResponse(w, r, err)
+		} else {
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	// Update only fields that are provided
+	if payload.FirstName != "" {
+		profile.FirstName = payload.FirstName
+	}
+	if payload.LastName != "" {
+		profile.LastName = payload.LastName
+	}
+	if payload.Age != 0 {
+		profile.Age = payload.Age
+	}
+	if payload.Gender != "" {
+		profile.Gender = payload.Gender
+	}
+	if payload.SportPreference != nil && len(payload.SportPreference) > 0 {
+		profile.SportPreference = payload.SportPreference
+	}
+
+	// Save the updated profile
+	errUpdate := app.store.Profile.Update(ctx, profile)
+	if errUpdate != nil {
+		log.Println(errUpdate.Error())
+		app.internalServerError(w, r, errUpdate)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, map[string]string{"message": "Profile updated successfully"}); err != nil {
+		app.internalServerError(w, r, err)
+	}
+
+}
