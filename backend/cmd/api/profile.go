@@ -16,6 +16,18 @@ type ProfilePayload struct {
 	SportPreference []string `json:"sport_preference" validate:"required"`
 }
 
+// createUserProfileHandler godoc
+//
+//	@Summary		creates a user profile
+//	@Description	creates a user profile
+//	@Tags			profile
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		ProfilePayload	true	"User profile"
+//	@Success		201		{object}	string			"Token"
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
+//	@Router			/profile [post]
 func (app *application) createUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	var payload ProfilePayload
 
