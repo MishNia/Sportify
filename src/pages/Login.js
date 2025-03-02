@@ -43,6 +43,7 @@ export default function Login() {
                 <div style={{ flex: 1, }} className="login-right">
                     <div className="login-box">
                         <h2>Sign in</h2>
+                        {error && <p className="error">{error}</p>}
                         <form onSubmit={handleSubmit}>
                         <label>Email</label>
                         <input type="email" placeholder="enter email" name="email" required onChange={handleChange}/>
