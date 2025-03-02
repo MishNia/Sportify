@@ -1,5 +1,6 @@
-import React, { useState } from "react"
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { signupUser } from "../api"; // Import API function
 
 export default function Register() {
   const navigate = useNavigate();
@@ -9,132 +10,154 @@ export default function Register() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
+  const [apiError, setApiError] = useState("");
 
-  const validateEmail = (email) => {
-    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    return emailRegex.test(email);
-  };
+  const validateEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+  const validatePassword = (password) =>
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+
   const handleEmailChange = (e) => {
     const newEmail = e.target.value;
     setEmail(newEmail);
+    setEmailError(validateEmail(newEmail) ? "" : "Please enter a valid email address.");
+  };
 
-    // Validate Email
-    if (!validateEmail(newEmail)) {
-      setEmailError("Please enter a valid email address.");
-    } else {
-      setEmailError("");
-    }
-  };
-  const validatePassword = (password) => {
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    return passwordRegex.test(password);
-  };
   const handlePasswordChange = (e) => {
     const newPassword = e.target.value;
     setPassword(newPassword);
-
-    if (!validatePassword(newPassword)) {
-      setPasswordError(
-        "Password must be at least 8 characters long, include an uppercase, lowercase, number, and a special character."
-      );
-    } else {
-      setPasswordError("");
-    }
+    setPasswordError(
+        validatePassword(newPassword)
+            ? ""
+            : "Password must be at least 8 characters, include uppercase, lowercase, number, and special character."
+    );
   };
 
-  // Handle Confirm Password Change
   const handleConfirmPasswordChange = (e) => {
     const newConfirmPassword = e.target.value;
     setConfirmPassword(newConfirmPassword);
+    setConfirmPasswordError(newConfirmPassword !== password ? "Passwords do not match." : "");
+  };
 
-    if (newConfirmPassword !== password) {
-      setConfirmPasswordError("Passwords do not match.");
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!email || emailError || !password || passwordError || !confirmPassword || confirmPasswordError) {
+      return;
+    }
+
+    const result = await signupUser(email, password);
+    if (result.error) {
+      setApiError(result.error);
     } else {
-      setConfirmPasswordError("");
+      alert("Signup successful! Redirecting to login.");
+      navigate("/login");
     }
   };
 
-  const isDisabled = !email || emailError ||
-    !password || passwordError ||
-    !confirmPassword || confirmPasswordError;
   return (
-    <div style={{
-      backgroundImage: "url('/sports.jpg')", backgroundSize: "cover",  backgroundPosition: 'center',
-
-    }} >
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "row" }}>
-        {/* Left Section with Branding & Background */}
-        <div style={{ backgroundColor: "black", width: '32%', padding:"50px",opacity: "80%", color: "white",alignContent:"center" ,textAlign: "center", justifyContent:"center" }} className="relative w-1/2 flex flex-col justify-center items-center text-white p-10">
-          
-          <div  className="relative z-10 text-center">
-            <h1 style={{fontSize:"80px", fontFamily:"sans-serif", marginBottom:"20px"}}><i>SPORT!FY</i></h1>
-            <p style={{fontSize:"20px"}}>
-              Connect with friends and the world around you through sports. Find people who share your love for sports, join local events, and never miss a game again. Whether you're an athlete, a casual player, or just a fan, Sportify connects you to the world of sports like never before!
+      <div
+          style={{
+            backgroundImage: "url('/sports.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "row",
+          }}
+      >
+        {/* Left Branding Section */}
+        <div
+            style={{
+              backgroundColor: "black",
+              width: "32%",
+              padding: "50px",
+              opacity: "80%",
+              color: "white",
+              textAlign: "center",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+        >
+          <div>
+            <h1 style={{ fontSize: "80px", fontFamily: "sans-serif", marginBottom: "20px" }}>
+              <i>SPORT!FY</i>
+            </h1>
+            <p style={{ fontSize: "20px" }}>
+              Connect with friends and the world around you through sports. Find people who share your love for sports, join local
+              events, and never miss a game again. Whether you're an athlete, a casual player, or just a fan, Sportify connects you
+              to the world of sports like never before!
             </p>
           </div>
         </div>
 
+        {/* Right Signup Form Section */}
+        <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
+          <div style={{ backgroundColor: "white", borderRadius: "10px", padding: "50px", width: "400px" }}>
+            <h2 style={{ fontFamily: "sans-serif", fontSize: "30px", textAlign: "center" }}>Sign Up</h2>
 
-        {/* Right Section with Sign-Up Form */}
-        <div style={{ flex: 1, }} >
-          <div style={{ backgroundColor: "white", borderRadius: "10px", margin: "150px 200px", padding: "50px" }}>
-            <div><h2 style={{ margin: "0px", fontFamily:"sans-serif", fontSize:"30px" }} >Sign Up</h2></div>
+            {apiError && <p style={{ color: "red", fontSize: "14px", textAlign: "center" }}>{apiError}</p>}
 
-            {/* Sign-Up Form */}
-            <form style={{ display: "flex", alignItems: "center", textAlign: "left", padding: "20px", flexDirection: "column" }}>
-              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                <div style={{ display: "flex", padding: "15px 0px", alignItems: "center", justifyContent: "space-between", flex: 2, width: "100%" }}>
-                  <label style={{  width: "40%",textAlign: "left" }} className="block text-gray-700 font-medium mb-1">Email</label>
-                  <input
-                    type="email"
-                    value={email}
-                    style={{ width: "40%" }} 
-                    onChange={handleEmailChange}
-                    placeholder="Enter your email"
-                    className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400 mb-4"
-                  /></div>{emailError && <p style={{ margin:"0px 0px 0px 15px",color: "red", fontSize: "10px" }}>{emailError}</p>}
-              </div>
+            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
+              {/* Email Field */}
+              <label>Email</label>
+              <input
+                  type="email"
+                  value={email}
+                  onChange={handleEmailChange}
+                  placeholder="Enter your email"
+                  style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+              />
+              {emailError && <p style={{ color: "red", fontSize: "12px" }}>{emailError}</p>}
 
+              {/* Password Field */}
+              <label>Password</label>
+              <input
+                  type="password"
+                  value={password}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter your password"
+                  style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+              />
+              {passwordError && <p style={{ color: "red", fontSize: "12px" }}>{passwordError}</p>}
 
-              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                <div style={{ display: "flex", padding: "15px 0px", alignItems: "center", justifyContent: "space-between", width: "100%", flex: 2}}>
-                  <label style={{width: "40%",  textAlign: "left" }} >Password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={handlePasswordChange}
-                    placeholder="Enter your password"
-                    className="border rounded-md focus:outline-none "
-                    style={{ width: "40%" }} 
+              {/* Confirm Password Field */}
+              <label>Confirm Password</label>
+              <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={handleConfirmPasswordChange}
+                  placeholder="Confirm your password"
+                  style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+              />
+              {confirmPasswordError && <p style={{ color: "red", fontSize: "12px" }}>{confirmPasswordError}</p>}
 
-                  /> 
-                </div>{passwordError && <p style={{ margin:"0px 0px 0px 5px",color: "red", fontSize: "10px" }}>{passwordError}</p>}
-              </div>
-
-              <div style={{ display: "flex", flexDirection: "column", width: "100%" }}>
-                <div style={{ display: "flex", padding: "15px 0px", alignItems: "center", justifyContent: "space-between", width: "100%", flex: 2 }}><label style={{ width: "40%",textAlign: "left" }} className="block text-gray-700 font-medium mb-1">Confirm Password</label>
-                  <input
-                    type="password"
-                    value={confirmPassword}
-                    onChange={handleConfirmPasswordChange}
-                    placeholder="Confirm your password"
-                    className="border rounded-md"
-                    style={{ width: "40%" }} 
-                  /></div>{confirmPasswordError && <p style={{ margin:"0px 0px 0px 15px",color: "red", fontSize: "10px" }}>{confirmPasswordError}</p>}</div>
-
-
+              {/* Register Button */}
+              <button
+                  type="submit"
+                  disabled={emailError || passwordError || confirmPasswordError}
+                  style={{
+                    padding: "12px",
+                    borderRadius: "5px",
+                    border: "none",
+                    backgroundColor: emailError || passwordError || confirmPasswordError ? "gray" : "black",
+                    color: "white",
+                    cursor: emailError || passwordError || confirmPasswordError ? "not-allowed" : "pointer",
+                  }}
+              >
+                Register
+              </button>
             </form>
-            {/* Register Button */}
-            <div><button className="button" style={{padding:"10px", width:"300px", borderRadius:"5px"}} disabled={isDisabled} onClick={(e) => { e.preventDefault(); navigate("/Profile") }}>Register</button></div>
 
             {/* Login Link */}
-            <p className="text-gray-600 text-sm text-center mt-4">
-              Already a user? <a href="/login" className="text-black font-medium">Log in here</a>
+            <p style={{ textAlign: "center", marginTop: "10px", fontSize: "14px" }}>
+              Already a user?{" "}
+              <a href="/login" style={{ color: "black", fontWeight: "bold", textDecoration: "none" }}>
+                Log in here
+              </a>
             </p>
           </div>
         </div>
       </div>
-    </div>
   );
 }

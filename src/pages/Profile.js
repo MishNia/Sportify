@@ -1,19 +1,22 @@
-
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { createProfile } from "../api"; // Import API function
 import "./Profile.css"; // Ensure this CSS file exists
 
 export default function Profile() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        firstName: "",
-        lastName: "",
+        email: "",  // Include email for API call
+        first_name: "",
+        last_name: "",
         age: "",
         gender: "",
-        sports: [],
+        sport_preference: [],
     });
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
     const sportsOptions = ["Football", "Basketball", "Tennis", "Cricket", "Soccer", "Baseball"];
 
@@ -25,25 +28,36 @@ export default function Profile() {
 
     // Handle Sports Selection
     const handleSportsChange = (sport) => {
-        const updatedSports = formData.sports.includes(sport)
-            ? formData.sports.filter((s) => s !== sport) // Remove if already selected
-            : [...formData.sports, sport]; // Add if not selected
+        const updatedSports = formData.sport_preference.includes(sport)
+            ? formData.sport_preference.filter((s) => s !== sport) // Remove if already selected
+            : [...formData.sport_preference, sport]; // Add if not selected
 
-        setFormData({ ...formData, sports: updatedSports });
+        setFormData({ ...formData, sport_preference: updatedSports });
     };
 
-    // Submit Handler
-    const handleSubmit = (e) => {
+    // Submit Handler with API Call
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Profile Data:", formData);
-        navigate("/dashboard"); // Redirect after submission
+        setError("");  // Reset previous error messages
+        setLoading(true);
+
+        const result = await createProfile(formData);
+
+        setLoading(false);
+
+        if (result.error) {
+            setError(result.error);
+        } else {
+            alert("Profile created successfully!");
+            navigate("/dashboard");
+        }
     };
 
     return (
         <div className="profile-container">
             <div style={{ minHeight: "100vh", display: "flex", flexDirection: "row" }}>
+                {/* Left Branding Section */}
                 <div style={{ backgroundColor: "black", width: '32%', padding: "50px", opacity: "80%", color: "white", alignContent: "center", textAlign: "center", justifyContent: "center" }} className="relative w-1/2 flex flex-col justify-center items-center text-white p-10">
-
                     <div className="relative z-10 text-center">
                         <h1 style={{ fontSize: "80px", fontFamily: "sans-serif", marginBottom: "20px" }}><i>SPORT!FY</i></h1>
                         <p style={{ fontSize: "20px" }}>
@@ -52,85 +66,92 @@ export default function Profile() {
                     </div>
                 </div>
 
-            <div style={{ flex: 1, }} className="profile-right">
-                <form className="profile-box" onSubmit={handleSubmit}>
-                    <h2>Profile</h2>
+                {/* Right Profile Form Section */}
+                <div style={{ flex: 1 }} className="profile-right">
+                    <form className="profile-box" onSubmit={handleSubmit}>
+                        <h2>Profile</h2>
 
-                    <label>First Name</label>
-                    <input
-                        type="text"
-                        name="firstName"
-                        placeholder="Enter first name"
-                        value={formData.firstName}
-                        onChange={handleChange}
-                        required
-                    />
+                        {error && <p style={{ color: "red", fontSize: "14px", textAlign: "center" }}>{error}</p>}
 
-                    <label>Last Name</label>
-                    <input
-                        type="text"
-                        name="lastName"
-                        placeholder="Enter last name"
-                        value={formData.lastName}
-                        onChange={handleChange}
-                        required
-                    />
+                        <label>Email</label>
+                        <input
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            required
+                        />
 
-                    <label>Age</label>
-                    <input
-                        type="number"
-                        name="age"
-                        placeholder="Enter age"
-                        value={formData.age}
-                        onChange={handleChange}
-                        required
-                    />
+                        <label>First Name</label>
+                        <input
+                            type="text"
+                            name="first_name"
+                            placeholder="Enter first name"
+                            value={formData.first_name}
+                            onChange={handleChange}
+                            required
+                        />
 
-                    <label>Gender</label>
-                    <select name="gender" value={formData.gender} onChange={handleChange} required>
-                        <option value="" disabled>Select Gender</option>
-                        <option value="Male">Male</option>
-                        <option value="Female">Female</option>
-                        <option value="Others">Others</option>
-                    </select>
+                        <label>Last Name</label>
+                        <input
+                            type="text"
+                            name="last_name"
+                            placeholder="Enter last name"
+                            value={formData.last_name}
+                            onChange={handleChange}
+                            required
+                        />
 
-                    <label>Sports Preferences</label>
-                    <div className="dropdown">
-                        <button
-                            type="button"
-                            
-                            className="dropdown-button"
-                            onClick={() => setDropdownOpen(!dropdownOpen)}
-                        >
-                            Select Sports ▾
+                        <label>Age</label>
+                        <input
+                            type="number"
+                            name="age"
+                            placeholder="Enter age"
+                            value={formData.age}
+                            onChange={handleChange}
+                            required
+                        />
+
+                        <label>Gender</label>
+                        <select name="gender" value={formData.gender} onChange={handleChange} required>
+                            <option value="" disabled>Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Others">Others</option>
+                        </select>
+
+                        <label>Sports Preferences</label>
+                        <div className="dropdown">
+                            <button
+                                type="button"
+                                className="dropdown-button"
+                                onClick={() => setDropdownOpen(!dropdownOpen)}
+                            >
+                                Select Sports ▾
+                            </button>
+                            {dropdownOpen && (
+                                <div className="dropdown-content">
+                                    {sportsOptions.map((sport) => (
+                                        <label key={sport} className="dropdown-item">
+                                            <input
+                                                type="checkbox"
+                                                checked={formData.sport_preference.includes(sport)}
+                                                onChange={() => handleSportsChange(sport)}
+                                            />
+                                            <span>{sport}</span>
+                                        </label>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        <button style={{ marginTop: "20px" }} type="submit" className="profile-button" disabled={loading}>
+                            {loading ? "Saving..." : "Let's Play"}
                         </button>
-                        {dropdownOpen && (
-                            <div className="dropdown-content">
-                                {sportsOptions.map((sport) => (
-                                    <label key={sport} className="dropdown-item">
-                                        <input
-                                            type="checkbox"
-                                            checked={formData.sports.includes(sport)}
-                                            onChange={() => handleSportsChange(sport)}
-                                        />
-                                        <span>{sport}</span> {/* Added span for proper spacing */}
-                                    </label>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-
-
-                    <button style={{marginTop:"20px"}} type="submit" className="profile-button">
-                        Let's Play
-                    </button>
-                </form>
-            </div>
+                    </form>
+                </div>
             </div>
         </div>
     );
 }
-
-
-
