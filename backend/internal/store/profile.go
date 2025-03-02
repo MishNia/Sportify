@@ -120,7 +120,7 @@ func (s *ProfileStore) Update(ctx context.Context, profile *Profile) error {
 		profile.Gender,
 		pq.Array(profile.SportPreference),
 	).Scan(
-		&profile.CreatedAt,
+		&profile.UpdatedAt,
 	)
 
 	if err != nil {
