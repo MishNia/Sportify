@@ -11,10 +11,13 @@ import (
 	"github.com/MishNia/Sportify.git/internal/auth"
 	"github.com/MishNia/Sportify.git/internal/store"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"go.uber.org/zap"
 )
 
-type mockUserStore struct{}
+type mockUserStore struct {
+	mock.Mock
+}
 
 func (m *mockUserStore) Create(ctx context.Context, user *store.User) error {
 	// Mock user creation success
@@ -37,7 +40,9 @@ func (m *mockUserStore) GetByID(ctx context.Context, userID int64) (*store.User,
 	}, nil
 }
 
-type mockProfileStore struct{}
+type mockProfileStore struct {
+	mock.Mock
+}
 
 func (m *mockProfileStore) GetByEmail(ctx context.Context, email string) (*store.Profile, error) {
 	// Mock profile retrieval
