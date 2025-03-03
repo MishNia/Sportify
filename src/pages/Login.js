@@ -22,7 +22,7 @@ export default function Login() {
         } else {
             localStorage.setItem("token", result.data.token); // Save token in localStorage
             alert("Login successful!");
-            navigate("/profile");
+            navigate("/Profile");
         }
     };
 

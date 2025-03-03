@@ -50,7 +50,7 @@ export default function Register() {
       setApiError(result.error);
     } else {
       alert("Signup successful! Redirecting to login.");
-      navigate("/login");
+      navigate("/Profile");
     }
   };
 

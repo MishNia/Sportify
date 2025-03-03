@@ -49,7 +49,7 @@ export default function Profile() {
             setError(result.error);
         } else {
             alert("Profile created successfully!");
-            navigate("/dashboard");
+            navigate("/Home");
         }
     };
 

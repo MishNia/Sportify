@@ -2,6 +2,7 @@ import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import Profile from "../../src/pages/Profile";
+import Home from "../../src/pages/Home"
 
 //Mocking useNavigate globally
 const mockNavigate = jest.fn();
@@ -88,15 +89,24 @@ describe("Profile Page Unit Tests", () => {
     expect(checkbox.checked).toBe(false);
   });
 
-  it("should navigate to /home when form is submitted", () => {
+  it("should navigate to /home when form is submitted", async () => {
     render(
       <MemoryRouter>
         <Profile />
       </MemoryRouter>
     );
-    
+  
+    // Fill all required fields
+    fireEvent.change(screen.getByPlaceholderText("Enter your email"), { target: { value: "test@example.com" } });
+    fireEvent.change(screen.getByPlaceholderText("Enter first name"), { target: { value: "John" } });
+    fireEvent.change(screen.getByPlaceholderText("Enter last name"), { target: { value: "Doe" } });
+    fireEvent.change(screen.getByPlaceholderText("Enter age"), { target: { value: "25" } });
+    fireEvent.change(screen.getByRole("combobox"), { target: { value: "Male" } });
+  
+    // Click submit button
     const submitButton = screen.getByRole("button", { name: /Let's Play/i });
     fireEvent.click(submitButton);
+  
     expect(mockNavigate).toHaveBeenCalledWith("/Home");
   });
 });
