@@ -9,14 +9,14 @@ import (
 )
 
 type Profile struct {
-	FirstName       string         `json:"first_name"`
-	LastName        string         `json:"last_name"`
-	Email           string         `json:"email"`
-	Age             int            `json:"age"`
-	Gender          string         `json:"gender"`
-	SportPreference pq.StringArray `json:"sport_preference"`
-	CreatedAt       string         `json:"created_at"`
-	UpdatedAt       string         `json:"updated_at"`
+	FirstName       string   `json:"first_name"`
+	LastName        string   `json:"last_name"`
+	Email           string   `json:"email"`
+	Age             int      `json:"age"`
+	Gender          string   `json:"gender"`
+	SportPreference []string `json:"sport_preference"`
+	CreatedAt       string   `json:"created_at"`
+	UpdatedAt       string   `json:"updated_at"`
 }
 
 type ProfileStore struct {
@@ -42,7 +42,7 @@ func (s *ProfileStore) Create(ctx context.Context, profile *Profile) error {
 		profile.LastName,
 		profile.Age,
 		profile.Gender,
-		pq.Array(profile.SportPreference),
+		pq.Array(&profile.SportPreference),
 	).Scan(
 		&profile.CreatedAt,
 	)
@@ -78,7 +78,7 @@ func (s *ProfileStore) GetByEmail(ctx context.Context, email string) (*Profile, 
 		&profile.LastName,
 		&profile.Age,
 		&profile.Gender,
-		&profile.SportPreference,
+		pq.Array(&profile.SportPreference),
 	)
 	if err != nil {
 		switch err {
@@ -118,7 +118,7 @@ func (s *ProfileStore) Update(ctx context.Context, profile *Profile) error {
 		profile.LastName,
 		profile.Age,
 		profile.Gender,
-		pq.Array(profile.SportPreference),
+		pq.Array(&profile.SportPreference),
 	).Scan(
 		&profile.CreatedAt,
 	)

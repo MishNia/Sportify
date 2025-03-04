@@ -73,9 +73,13 @@ func (app *application) mount() http.Handler {
 			r.Post("/login", app.userLoginHandler)
 		})
 
-		r.Post("/profile", app.createUserProfileHandler)
+		r.Route("/profile", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
 
-		r.Put("/profile", app.updateUserProfileHandler)
+			r.Get("/{userID}", app.getUserProfileHandler)
+			r.Post("/", app.createUserProfileHandler)
+			r.Put("/", app.updateUserProfileHandler)
+		})
 	})
 
 	return r

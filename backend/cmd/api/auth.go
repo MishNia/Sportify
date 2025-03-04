@@ -9,6 +9,9 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type userKey string
+const userCtx userKey = "user"
+
 var (
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
@@ -168,4 +171,9 @@ func (app *application) createJwtToken(userID int64) (string, error) {
 	}
 
 	return token, nil
+}
+
+func getUserFromContext(r *http.Request) *store.User {
+	user, _ := r.Context().Value(userCtx).(*store.User)
+	return user
 }

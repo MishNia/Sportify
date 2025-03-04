@@ -47,6 +47,27 @@ definitions:
     - email
     - password
     type: object
+  store.Profile:
+    properties:
+      age:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      gender:
+        type: string
+      last_name:
+        type: string
+      sport_preference:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
 info:
   contact:
     email: support@swagger.io
@@ -119,6 +140,41 @@ paths:
     post:
       consumes:
       - application/json
+      description: updates a user profile
+      parameters:
+      - description: User profile
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.ProfilePayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/store.Profile'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: updates a user profile
+      tags:
+      - profile
+    put:
+      consumes:
+      - application/json
       description: creates a user profile
       parameters:
       - description: User profile
@@ -131,16 +187,54 @@ paths:
       - application/json
       responses:
         "201":
-          description: Token
+          description: Created
           schema:
-            type: string
+            $ref: '#/definitions/store.Profile'
         "400":
           description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
           schema: {}
         "500":
           description: Internal Server Error
           schema: {}
+      security:
+      - ApiKeyAuth: []
       summary: creates a user profile
+      tags:
+      - profile
+  /profile/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Fetches a post by userID, if no userID is provided, fetches the
+        profile of the authenticated user
+      parameters:
+      - default: 0
+        description: user Id
+        in: path
+        name: id
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.Profile'
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Fetches a profile
       tags:
       - profile
 securityDefinitions:
