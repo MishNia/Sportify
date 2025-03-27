@@ -11,6 +11,7 @@ import (
 	"github.com/MishNia/Sportify.git/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-playground/validator/v10"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
@@ -20,6 +21,7 @@ type application struct {
 	store         store.Storage
 	logger        *zap.SugaredLogger
 	authenticator auth.Authenticator
+	validator     *validator.Validate
 }
 
 type config struct {
@@ -79,6 +81,14 @@ func (app *application) mount() http.Handler {
 			r.Get("/{userID}", app.getUserProfileHandler)
 			r.Post("/", app.createUserProfileHandler)
 			r.Put("/", app.updateUserProfileHandler)
+		})
+
+		r.Route("/events", func(r chi.Router) {
+			r.Use(app.AuthTokenMiddleware)
+
+			r.Post("/", app.createEventHandler)
+			r.Get("/{id}", app.getEventHandler)
+			r.Post("/{id}/join", app.joinEventHandler)
 		})
 	})
 

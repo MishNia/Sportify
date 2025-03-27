@@ -7,6 +7,7 @@ import (
 	"github.com/MishNia/Sportify.git/internal/db"
 	"github.com/MishNia/Sportify.git/internal/env"
 	"github.com/MishNia/Sportify.git/internal/store"
+	"github.com/go-playground/validator/v10"
 	"go.uber.org/zap"
 )
 
@@ -73,6 +74,7 @@ func main() {
 		store:         store,
 		logger:        logger,
 		authenticator: jwtAuthenticator,
+		validator:     validator.New(),
 	}
 
 	mux := app.mount()

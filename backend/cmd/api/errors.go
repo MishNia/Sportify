@@ -59,3 +59,9 @@ func (app *application) rateLimitExceededResponse(w http.ResponseWriter, r *http
 
 	writeJSONError(w, http.StatusTooManyRequests, "rate limit exceeded, retry after: "+retryAfter)
 }
+
+func (app *application) unauthorizedResponse(w http.ResponseWriter, r *http.Request) {
+	app.logger.Warnw("unauthorized access", "method", r.Method, "path", r.URL.Path)
+	message := "you must be authenticated to access this resource"
+	writeJSONError(w, http.StatusUnauthorized, message)
+}

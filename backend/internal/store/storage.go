@@ -24,12 +24,18 @@ type Storage struct {
 		Create(context.Context, *Profile) error
 		Update(context.Context, *Profile) error
 	}
+	Events interface {
+		Create(context.Context, *Event) error
+		GetByID(context.Context, int64) (*Event, error)
+		Join(context.Context, int64, int64) error
+	}
 }
 
 func NewStorage(db *sql.DB) Storage {
 	return Storage{
 		Users:   &UserStore{db},
 		Profile: &ProfileStore{db},
+		Events:  &EventStore{db},
 	}
 }
 
