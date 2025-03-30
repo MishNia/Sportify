@@ -86,6 +86,9 @@ func (app *application) mount() http.Handler {
 		r.Route("/events", func(r chi.Router) {
 			r.Use(app.AuthTokenMiddleware)
 
+			// used for feed and search along with filetring
+			r.Get("/", app.getAllEventsHandler)
+
 			r.Post("/", app.createEventHandler)
 			r.Put("/{id}", app.updateEventHandler)
 			r.Get("/{id}", app.getEventHandler)

@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
+	"strings"
 	"time"
 )
 
@@ -41,6 +43,18 @@ type Event struct {
 	Participants    []EventParticipant `json:"participants"`
 }
 
+type EventFilter struct {
+	ID           *int64
+	Sports       []string
+	MaxPlayers   *int
+	EventOwner   *int64
+	IsFull       *bool
+	AfterDate    *time.Time
+	BeforeDate   *time.Time
+	LocationName *string
+	SortBy       string
+	Order        string
+}
 type EventStore struct {
 	db *sql.DB
 }
@@ -315,4 +329,124 @@ func (s *EventStore) Leave(ctx context.Context, eventID, userID int64) error {
 
 	// Commit the transaction
 	return tx.Commit()
+}
+
+func (s *EventStore) GetAllWithFilter(ctx context.Context, filter *EventFilter) ([]*Event, error) {
+	var args []interface{}
+	var conditions []string
+
+	query := `
+		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players,
+		       e.location_name, e.latitude, e.longitude, e.description,
+		       e.title, e.is_full, e.created_at, e.updated_at,
+		       COUNT(ep.id) AS registered_count
+		FROM events e
+		LEFT JOIN event_participants ep ON e.id = ep.event_id
+	`
+
+	// Filters
+	argID := 1 // PostgreSQL placeholder counter
+
+	if filter.ID != nil {
+		conditions = append(conditions, fmt.Sprintf("e.id = $%d", argID))
+		args = append(args, *filter.ID)
+		argID++
+	}
+
+	if len(filter.Sports) > 0 {
+		sportConditions := []string{}
+		for _, sport := range filter.Sports {
+			sportConditions = append(sportConditions, fmt.Sprintf("LOWER(e.sport) ILIKE $%d", argID))
+			args = append(args, "%"+strings.ToLower(sport)+"%")
+			argID++
+		}
+		conditions = append(conditions, "("+strings.Join(sportConditions, " OR ")+")")
+	}
+
+	if filter.MaxPlayers != nil {
+		conditions = append(conditions, fmt.Sprintf("e.max_players = $%d", argID))
+		args = append(args, *filter.MaxPlayers)
+		argID++
+	}
+
+	if filter.EventOwner != nil {
+		conditions = append(conditions, fmt.Sprintf("e.event_owner = $%d", argID))
+		args = append(args, *filter.EventOwner)
+		argID++
+	}
+
+	if filter.IsFull != nil {
+		conditions = append(conditions, fmt.Sprintf("e.is_full = $%d", argID))
+		args = append(args, *filter.IsFull)
+		argID++
+	}
+
+	if filter.AfterDate != nil {
+		conditions = append(conditions, fmt.Sprintf("e.event_datetime >= $%d", argID))
+		args = append(args, *filter.AfterDate)
+		argID++
+	}
+
+	if filter.BeforeDate != nil {
+		conditions = append(conditions, fmt.Sprintf("e.event_datetime <= $%d", argID))
+		args = append(args, *filter.BeforeDate)
+		argID++
+	}
+
+	if filter.LocationName != nil {
+		conditions = append(conditions, fmt.Sprintf("LOWER(e.location_name) ILIKE $%d", argID))
+		args = append(args, "%"+strings.ToLower(*filter.LocationName)+"%")
+		argID++
+	}
+
+	if len(conditions) > 0 {
+		query += " WHERE " + strings.Join(conditions, " AND ")
+	}
+
+	query += `
+		GROUP BY e.id
+	`
+
+	// Sorting
+	sortField := "e.created_at"
+	if filter.SortBy == "event_datetime" || filter.SortBy == "created_at" {
+		sortField = "e." + filter.SortBy
+	} else if filter.SortBy == "registered_count" {
+		sortField = "registered_count"
+	}
+	sortOrder := "ASC"
+	if strings.ToLower(filter.Order) == "desc" {
+		sortOrder = "DESC"
+	}
+	query += fmt.Sprintf(" ORDER BY %s %s", sortField, sortOrder)
+
+	println("Query:", query)
+	println("Args:", args)
+
+	// Execute query
+	rows, err := s.db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []*Event
+	for rows.Next() {
+		var e Event
+		err := rows.Scan(
+			&e.ID, &e.EventOwner, &e.Sport, &e.EventDateTime, &e.MaxPlayers,
+			&e.LocationName, &e.Latitude, &e.Longitude, &e.Description,
+			&e.Title, &e.IsFull, &e.CreatedAt, &e.UpdatedAt, &e.RegisteredCount,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, &e)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return events, nil
 }

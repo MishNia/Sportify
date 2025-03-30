@@ -31,6 +31,7 @@ type Storage struct {
 		Delete(context.Context, int64) error
 		Join(context.Context, int64, int64) error
 		Leave(context.Context, int64, int64) error
+		GetAllWithFilter(context.Context, *EventFilter) ([]*Event, error)
 	}
 }
 
