@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 	"strconv"
@@ -12,31 +11,25 @@ import (
 )
 
 // getEventHandler godoc
-// @Summary      Get event details
-// @Description  Get details of a specific event including participants
-// @Tags         events
-// @Accept       json
-// @Produce      json
-// @Param        id path int true "Event ID"
-// @Success      200 {object} store.Event
-// @Failure      400 {object} error
-// @Failure      401 {object} error
-// @Failure      404 {object} error
-// @Failure      500 {object} error
-// @Security     ApiKeyAuth
-// @Router       /v1/events/{id} [get]
+//
+//	@Summary		Get event details
+//	@Description	Get details of a specific event including participants
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Event ID"
+//	@Success		200	{object}	store.Event
+//	@Failure		400	{object}	error
+//	@Failure		401	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/events/{id} [get]
 func (app *application) getEventHandler(w http.ResponseWriter, r *http.Request) {
 	// Get event ID from URL
 	eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 	if err != nil {
 		app.badRequestResponse(w, r, err)
-		return
-	}
-
-	// Get authenticated user
-	user := getUserFromContext(r)
-	if user == nil {
-		app.unauthorizedResponse(w, r)
 		return
 	}
 
@@ -56,37 +49,40 @@ func (app *application) getEventHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-type EventsPayload struct {
-	FirstName       string   `json:"first_name" validate:"required"`
-	LastName        string   `json:"last_name" validate:"required"`
-	Email           string   `json:"email" validate:"required,email"`
-	Age             int      `json:"age" validate:"required"`
-	Gender          string   `json:"gender" validate:"required"`
-	SportPreference []string `json:"sport_preference" validate:"required"`
+type CreateEventPayload struct {
+	Sport        string    `json:"sport" validate:"required"`
+	EventDate    time.Time `json:"event_date" validate:"required"`
+	MaxPlayers   int       `json:"max_players" validate:"required,gt=0"`
+	LocationName string    `json:"location_name" validate:"required"`
+	Latitude     float64   `json:"latitude" validate:"required"`
+	Longitude    float64   `json:"longitude" validate:"required"`
+	Description  string    `json:"description"`
+	Title        string    `json:"title"`
 }
 
 // createEventHandler godoc
-// @Summary      Create a new event
-// @Description  Creates a new sports event with the provided details
-// @Tags         events
-// @Accept       json
-// @Produce      json
-// @Param        payload body CreateEventPayload true "Event details"
-// @Success      201 {object} store.Event
-// @Failure      400 {object} error
-// @Failure      401 {object} error
-// @Failure      500 {object} error
-// @Security     ApiKeyAuth
-// @Router       /v1/events [post]
+//
+//	@Summary		Create a new event
+//	@Description	Creates a new sports event with the provided details
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			payload	body		CreateEventPayload	true	"Event details"
+//	@Success		201		{object}	store.Event
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/events [post]
 func (app *application) createEventHandler(w http.ResponseWriter, r *http.Request) {
 	var payload CreateEventPayload
 
-	if err := json.NewDecoder(r.Body).Decode(&payload); err != nil {
+	if err := readJSON(w, r, &payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
 
-	if err := app.validator.Struct(payload); err != nil {
+	if err := Validate.Struct(payload); err != nil {
 		app.badRequestResponse(w, r, err)
 		return
 	}
@@ -128,32 +124,181 @@ func (app *application) createEventHandler(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-type CreateEventPayload struct {
-	Sport        string    `json:"sport" validate:"required"`
-	EventDate    time.Time `json:"event_date" validate:"required"`
-	MaxPlayers   int       `json:"max_players" validate:"required,gt=0"`
-	LocationName string    `json:"location_name" validate:"required"`
-	Latitude     float64   `json:"latitude" validate:"required"`
-	Longitude    float64   `json:"longitude" validate:"required"`
-	Description  string    `json:"description"`
-	Title        string    `json:"title"`
+type UpdateEventPayload struct {
+	Sport        *string    `json:"sport"`
+	EventDate    *time.Time `json:"event_date"`
+	MaxPlayers   *int       `json:"max_players" validate:"gt=0"`
+	LocationName *string    `json:"location_name"`
+	Latitude     *float64   `json:"latitude"`
+	Longitude    *float64   `json:"longitude"`
+	Description  *string    `json:"description"`
+	Title        *string    `json:"title"`
+}
+
+// updateEventHandler godoc
+//
+//	@Summary		Update an event
+//	@Description	Update event details (partial or full). Only owner can update.
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			id		path		int					true	"Event ID"
+//	@Param			payload	body		UpdateEventPayload	true	"Fields to update"
+//	@Success		200		{object}	store.Event
+//	@Failure		400		{object}	error
+//	@Failure		401		{object}	error
+//	@Failure		403		{object}	error
+//	@Failure		404		{object}	error
+//	@Failure		500		{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/events/{id} [put]
+func (app *application) updateEventHandler(w http.ResponseWriter, r *http.Request) {
+	// Get event ID from URL
+	eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Handle payload
+	var payload UpdateEventPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Validate payload
+	if err := Validate.Struct(payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	ctx := r.Context()
+	event, err := app.store.Events.GetByID(ctx, eventID)
+	if err != nil {
+		if err == store.ErrNotFound {
+			app.notFoundResponse(w, r, err)
+		} else {
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	// Get the authenticated user
+	user := getUserFromContext(r)
+	if user.ID != event.EventOwner {
+		app.forbiddenResponse(w, r)
+		return
+	}
+
+	// Optional updates
+	if payload.Sport != nil {
+		event.Sport = *payload.Sport
+	}
+	if payload.EventDate != nil {
+		event.EventDateTime = *payload.EventDate
+	}
+	if payload.MaxPlayers != nil {
+		event.MaxPlayers = *payload.MaxPlayers
+	}
+	if payload.LocationName != nil {
+		event.LocationName = *payload.LocationName
+	}
+	if payload.Latitude != nil {
+		event.Latitude = *payload.Latitude
+	}
+	if payload.Longitude != nil {
+		event.Longitude = *payload.Longitude
+	}
+	if payload.Title != nil {
+		event.Title = *payload.Title
+	}
+	if payload.Description != nil {
+		event.Description = *payload.Description
+	}
+	event.UpdatedAt = time.Now()
+
+	if err := app.store.Events.Update(ctx, event); err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, event); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// deleteEventHandler godoc
+//
+//	@Summary		Delete an event
+//	@Description	Event owner deletes their event (including all participants)
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Event ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	error "Invalid ID"
+//	@Failure		401	{object}	error "Unauthorized"
+//	@Failure		403	{object}	error "User is not the event owner"
+//	@Failure		404	{object}	error "Event not found"
+//	@Failure		500	{object}	error "Internal server error"
+//	@Security		ApiKeyAuth
+//	@Router			/events/{id} [delete]
+func (app *application) deleteEventHandler(w http.ResponseWriter, r *http.Request) {
+	eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	event, err := app.store.Events.GetByID(r.Context(), eventID)
+	if err != nil {
+		if err == store.ErrNotFound {
+			app.notFoundResponse(w, r, err)
+		} else {
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	user := getUserFromContext(r)
+	if user.ID != event.EventOwner {
+		app.forbiddenResponse(w, r)
+		return
+	}
+
+	err = app.store.Events.Delete(r.Context(), eventID)
+	if err != nil {
+		if err == store.ErrEventNotFound {
+			app.notFoundResponse(w, r, err)
+		} else {
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	response := map[string]string{"message": "You have successfully deleted the event!"}
+	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+		app.internalServerError(w, r, err)
+	}
 }
 
 // joinEventHandler godoc
-// @Summary      Join an event
-// @Description  Allows a user to join an existing event
-// @Tags         events
-// @Accept       json
-// @Produce      json
-// @Param        id path int true "Event ID"
-// @Success      200 {object} map[string]string
-// @Failure      400 {object} error
-// @Failure      401 {object} error
-// @Failure      404 {object} error
-// @Failure      409 {object} error
-// @Failure      500 {object} error
-// @Security     ApiKeyAuth
-// @Router       /v1/events/{id}/join [post]
+//
+//	@Summary		Join an event
+//	@Description	Allows a user to join an existing event
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Event ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	error
+//	@Failure		401	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		409	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/events/{id}/join [post]
 func (app *application) joinEventHandler(w http.ResponseWriter, r *http.Request) {
 	// Get event ID from URL
 	eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
@@ -199,6 +344,58 @@ func (app *application) joinEventHandler(w http.ResponseWriter, r *http.Request)
 	// Return success response
 	response := map[string]string{
 		"message": "You have successfully joined the event!",
+	}
+	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
+
+// leaveEventHandler godoc
+//
+//	@Summary		leave an event
+//	@Description	Allows a user to leave from an existing event
+//	@Tags			events
+//	@Accept			json
+//	@Produce		json
+//	@Param			id	path		int	true	"Event ID"
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	error
+//	@Failure		401	{object}	error
+//	@Failure		403	{object}	error
+//	@Failure		404	{object}	error
+//	@Failure		500	{object}	error
+//	@Security		ApiKeyAuth
+//	@Router			/events/{id}/leave [delete]
+func (app *application) leaveEventHandler(w http.ResponseWriter, r *http.Request) {
+	// Get event ID from URL
+	eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+	if err != nil {
+		app.badRequestResponse(w, r, err)
+		return
+	}
+
+	// Get authenticated user
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedResponse(w, r)
+		return
+	}
+
+	// leave the event
+	if err := app.store.Events.Leave(r.Context(), eventID, user.ID); err != nil {
+		if err == store.ErrEventNotFound {
+			app.notFoundResponse(w, r, err)
+		} else if err == store.ErrNotJoined {
+			app.forbiddenResponse(w, r)
+		} else {
+			app.internalServerError(w, r, err)
+		}
+		return
+	}
+
+	// Return success response
+	response := map[string]string{
+		"message": "You have successfully left the event!",
 	}
 	if err := app.jsonResponse(w, http.StatusOK, response); err != nil {
 		app.internalServerError(w, r, err)

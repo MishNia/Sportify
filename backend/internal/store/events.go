@@ -10,6 +10,8 @@ import (
 var (
 	ErrEventNotFound = errors.New("event not found")
 	ErrAlreadyJoined = errors.New("user has already joined this event")
+	ErrNotJoined     = errors.New("user is not a participant of this event")
+	ErrForbidden     = errors.New("user is not the event owner")
 )
 
 type EventParticipant struct {
@@ -76,6 +78,54 @@ func (s *EventStore) Create(ctx context.Context, event *Event) error {
 		&event.CreatedAt,
 		&event.UpdatedAt,
 	)
+}
+
+func (s *EventStore) Update(ctx context.Context, event *Event) error {
+	query := `
+		UPDATE events
+		SET
+			sport = $1,
+			event_datetime = $2,
+			max_players = $3,
+			location_name = $4,
+			latitude = $5,
+			longitude = $6,
+			description = $7,
+			title = $8,
+			is_full = $9,
+			updated_at = $10
+		WHERE id = $11
+		RETURNING updated_at`
+
+	// update event fields
+	if len(event.Participants) >= event.MaxPlayers {
+		event.IsFull = true
+	} else {
+		event.IsFull = false
+	}
+	args := []interface{}{
+		event.Sport,
+		event.EventDateTime,
+		event.MaxPlayers,
+		event.LocationName,
+		event.Latitude,
+		event.Longitude,
+		event.Description,
+		event.Title,
+		event.IsFull,
+		event.UpdatedAt,
+		event.ID,
+	}
+
+	err := s.db.QueryRowContext(ctx, query, args...).Scan(&event.UpdatedAt)
+	if err == sql.ErrNoRows {
+		return ErrEventNotFound
+	}
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
@@ -146,6 +196,33 @@ func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
 	return event, nil
 }
 
+func (s *EventStore) Delete(ctx context.Context, eventID int64) error {
+	// Start transaction
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Delete participants first (due to FK constraints)
+	_, err = tx.ExecContext(ctx, `DELETE FROM event_participants WHERE event_id = $1`, eventID)
+	if err != nil {
+		return err
+	}
+
+	// Delete event
+	res, err := tx.ExecContext(ctx, `DELETE FROM events WHERE id = $1`, eventID)
+	if err != nil {
+		return err
+	}
+	rowsAffected, _ := res.RowsAffected()
+	if rowsAffected == 0 {
+		return ErrEventNotFound // Just in case event disappeared during operation
+	}
+
+	return tx.Commit()
+}
+
 func (s *EventStore) Join(ctx context.Context, eventID, userID int64) error {
 	// Check if user has already joined
 	query := `SELECT EXISTS(SELECT 1 FROM event_participants WHERE event_id = $1 AND user_id = $2)`
@@ -183,5 +260,59 @@ func (s *EventStore) Join(ctx context.Context, eventID, userID int64) error {
 		return err
 	}
 
+	return tx.Commit()
+}
+
+func (s *EventStore) Leave(ctx context.Context, eventID, userID int64) error {
+	// Start transaction
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// Check if event exists
+	var exists bool
+	err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM events WHERE id = $1)`, eventID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrEventNotFound
+	}
+
+	// Check if user is a participant
+	err = tx.QueryRowContext(ctx, `SELECT EXISTS(SELECT 1 FROM event_participants WHERE event_id = $1 AND user_id = $2)`, eventID, userID).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return ErrNotJoined
+	}
+
+	// Delete participant record
+	res, err := tx.ExecContext(ctx, `DELETE FROM event_participants WHERE event_id = $1 AND user_id = $2`, eventID, userID)
+	if err != nil {
+		return err
+	}
+	if affected, _ := res.RowsAffected(); affected == 0 {
+		return ErrNotJoined // fallback safeguard
+	}
+
+	// Recalculate is_full
+	_, err = tx.ExecContext(ctx, `
+		UPDATE events
+		SET is_full = (
+			SELECT COUNT(*) >= max_players
+			FROM event_participants
+			WHERE event_id = $1
+		),
+		updated_at = $2
+		WHERE id = $1`, eventID, time.Now())
+	if err != nil {
+		return err
+	}
+
+	// Commit the transaction
 	return tx.Commit()
 }

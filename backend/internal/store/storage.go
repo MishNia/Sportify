@@ -27,7 +27,10 @@ type Storage struct {
 	Events interface {
 		Create(context.Context, *Event) error
 		GetByID(context.Context, int64) (*Event, error)
+		Update(context.Context, *Event) error
+		Delete(context.Context, int64) error
 		Join(context.Context, int64, int64) error
+		Leave(context.Context, int64, int64) error
 	}
 }
 

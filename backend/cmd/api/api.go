@@ -87,8 +87,11 @@ func (app *application) mount() http.Handler {
 			r.Use(app.AuthTokenMiddleware)
 
 			r.Post("/", app.createEventHandler)
+			r.Put("/{id}", app.updateEventHandler)
 			r.Get("/{id}", app.getEventHandler)
+			r.Delete("/{id}", app.deleteEventHandler)
 			r.Post("/{id}/join", app.joinEventHandler)
+			r.Delete("/{id}/leave", app.leaveEventHandler)
 		})
 	})
 

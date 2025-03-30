@@ -1,5 +1,31 @@
 basePath: /v1
 definitions:
+  main.CreateEventPayload:
+    properties:
+      description:
+        type: string
+      event_date:
+        type: string
+      latitude:
+        type: number
+      location_name:
+        type: string
+      longitude:
+        type: number
+      max_players:
+        type: integer
+      sport:
+        type: string
+      title:
+        type: string
+    required:
+    - event_date
+    - latitude
+    - location_name
+    - longitude
+    - max_players
+    - sport
+    type: object
   main.LoginPayload:
     properties:
       email:
@@ -46,6 +72,75 @@ definitions:
     required:
     - email
     - password
+    type: object
+  main.UpdateEventPayload:
+    properties:
+      description:
+        type: string
+      event_date:
+        type: string
+      latitude:
+        type: number
+      location_name:
+        type: string
+      longitude:
+        type: number
+      max_players:
+        type: integer
+      sport:
+        type: string
+      title:
+        type: string
+    type: object
+  store.Event:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      event_datetime:
+        type: string
+      event_owner:
+        type: integer
+      id:
+        type: integer
+      is_full:
+        type: boolean
+      latitude:
+        type: number
+      location_name:
+        type: string
+      longitude:
+        type: number
+      max_players:
+        type: integer
+      participants:
+        items:
+          $ref: '#/definitions/store.EventParticipant'
+        type: array
+      registered_count:
+        type: integer
+      sport:
+        type: string
+      title:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  store.EventParticipant:
+    properties:
+      event_id:
+        type: integer
+      first_name:
+        type: string
+      id:
+        type: integer
+      joined_at:
+        type: string
+      last_name:
+        type: string
+      user_id:
+        type: integer
     type: object
   store.Profile:
     properties:
@@ -136,6 +231,236 @@ paths:
       summary: Registers a user
       tags:
       - authentication
+  /events:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new sports event with the provided details
+      parameters:
+      - description: Event details
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.CreateEventPayload'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/store.Event'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new event
+      tags:
+      - events
+  /events/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Event owner deletes their event (including all participants)
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Invalid ID
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: User is not the event owner
+          schema: {}
+        "404":
+          description: Event not found
+          schema: {}
+        "500":
+          description: Internal server error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Delete an event
+      tags:
+      - events
+    get:
+      consumes:
+      - application/json
+      description: Get details of a specific event including participants
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.Event'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Get event details
+      tags:
+      - events
+    put:
+      consumes:
+      - application/json
+      description: Update event details (partial or full). Only owner can update.
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/main.UpdateEventPayload'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.Event'
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Update an event
+      tags:
+      - events
+  /events/{id}/join:
+    post:
+      consumes:
+      - application/json
+      description: Allows a user to join an existing event
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "409":
+          description: Conflict
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: Join an event
+      tags:
+      - events
+  /events/{id}/leave:
+    delete:
+      consumes:
+      - application/json
+      description: Allows a user to leave from an existing event
+      parameters:
+      - description: Event ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema: {}
+        "401":
+          description: Unauthorized
+          schema: {}
+        "403":
+          description: Forbidden
+          schema: {}
+        "404":
+          description: Not Found
+          schema: {}
+        "500":
+          description: Internal Server Error
+          schema: {}
+      security:
+      - ApiKeyAuth: []
+      summary: leave an event
+      tags:
+      - events
   /profile:
     post:
       consumes:
