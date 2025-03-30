@@ -67,6 +67,60 @@ func (m *mockProfileStore) Update(ctx context.Context, profile *store.Profile) e
 	return nil
 }
 
+type mockEventStore struct {
+	mock.Mock
+}
+
+func (m *mockEventStore) Create(ctx context.Context, event *store.Event) error {
+	// Mock event creation success
+	event.ID = 1
+	event.CreatedAt = time.Now()
+	event.UpdatedAt = time.Now()
+	// Don't modify other fields, keep the input values
+	return nil
+}
+
+func (m *mockEventStore) GetByID(ctx context.Context, id int64) (*store.Event, error) {
+	// Mock getting an event by ID
+	event := &store.Event{
+		ID:            id,
+		EventOwner:    1,
+		Sport:         "Football",
+		EventDateTime: time.Now().Add(24 * time.Hour),
+		MaxPlayers:    10,
+		LocationName:  "Central Park",
+		Latitude:      40.7829,
+		Longitude:     -73.9654,
+		Description:   "Test event",
+		Title:         "Test Event",
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+		IsFull:        false,
+	}
+	return event, nil
+}
+
+func (m *mockEventStore) Update(ctx context.Context, event *store.Event) error {
+	// Mock event update success
+	event.UpdatedAt = time.Now()
+	return nil
+}
+
+func (m *mockEventStore) Delete(ctx context.Context, id int64) error {
+	// Mock event deletion success
+	return nil
+}
+
+func (m *mockEventStore) Join(ctx context.Context, eventID, userID int64) error {
+	// Mock joining an event
+	return nil
+}
+
+func (m *mockEventStore) Leave(ctx context.Context, eventID, userID int64) error {
+	// Mock leaving an event
+	return nil
+}
+
 // Mock Dependencies
 func newTestApplication() *application {
 	logger, _ := zap.NewProduction()
@@ -76,6 +130,7 @@ func newTestApplication() *application {
 	mockStore := store.Storage{
 		Users:   &mockUserStore{},    // Mock user store
 		Profile: &mockProfileStore{}, // Mock profile store
+		Events:  &mockEventStore{},   // Mock events store
 	}
 
 	return &application{

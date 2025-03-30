@@ -1,2 +1,4 @@
 ./node_modules
 node_modules
+bin/main
+bin/build-errors.log

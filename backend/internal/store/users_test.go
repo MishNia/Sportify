@@ -70,7 +70,7 @@ func TestUserStore_GetByID(t *testing.T) {
 	store := &UserStore{db: db}
 	userID := int64(1)
 
-	query := `SELECT users.id, email, password, created_at, roles\.\* FROM users JOIN roles ON \(users.role_id = roles.id\) WHERE users.id = \$1`
+	query := `SELECT users.id, email, password, created_at FROM users WHERE users.id = \$1`
 	mock.ExpectQuery(query).
 		WithArgs(userID).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "password", "created_at"}).
@@ -94,7 +94,7 @@ func TestUserStore_GetByID_NotFound(t *testing.T) {
 	store := &UserStore{db: db}
 	userID := int64(99)
 
-	mock.ExpectQuery(`SELECT users.id, email, password, created_at, roles\.\* FROM users JOIN roles ON \(users.role_id = roles.id\) WHERE users.id = \$1`).
+	mock.ExpectQuery(`SELECT users.id, email, password, created_at FROM users WHERE users.id = \$1`).
 		WithArgs(userID).
 		WillReturnError(sql.ErrNoRows)
 

@@ -30,12 +30,12 @@ func TestProfileStore_Create(t *testing.T) {
 		Email:           "john.doe@example.com",
 		Age:             30,
 		Gender:          "Male",
-		SportPreference: pq.StringArray{"Basketball", "Tennis"},
+		SportPreference: []string{"Basketball", "Tennis"},
 	}
 
 	query := `INSERT INTO profile \(email, first_name, last_name, age, gender, sport_preference\) VALUES \(\$1, \$2, \$3, \$4, \$5, \$6\) RETURNING created_at`
 	mock.ExpectQuery(query).
-		WithArgs(profile.Email, profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.SportPreference).
+		WithArgs(profile.Email, profile.FirstName, profile.LastName, profile.Age, profile.Gender, pq.Array(profile.SportPreference)).
 		WillReturnRows(sqlmock.NewRows([]string{"created_at"}).AddRow("2025-03-01"))
 
 	err := store.Create(context.Background(), profile)
@@ -74,7 +74,7 @@ func TestProfileStore_Update(t *testing.T) {
 		Email:           "john.doe@example.com",
 		Age:             31,
 		Gender:          "Male",
-		SportPreference: pq.StringArray{"Basketball", "Tennis"},
+		SportPreference: []string{"Basketball", "Tennis"},
 	}
 
 	query := `(?i)UPDATE profile SET first_name = COALESCE\(\$2, first_name\), 
@@ -88,7 +88,7 @@ func TestProfileStore_Update(t *testing.T) {
 	`
 
 	mock.ExpectQuery(query).
-		WithArgs(profile.Email, profile.FirstName, profile.LastName, profile.Age, profile.Gender, profile.SportPreference).
+		WithArgs(profile.Email, profile.FirstName, profile.LastName, profile.Age, profile.Gender, pq.Array(profile.SportPreference)).
 		WillReturnRows(sqlmock.NewRows([]string{"updated_at"}).AddRow("2025-03-02"))
 
 	err := store.Update(context.Background(), profile)
