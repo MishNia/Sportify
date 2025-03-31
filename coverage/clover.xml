@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<coverage generated="1741040106123" clover="3.2.0">
+  <project timestamp="1741040106123" name="All files">
+    <metrics statements="80" coveredstatements="71" conditionals="22" coveredconditionals="22" methods="34" coveredmethods="28" elements="136" coveredelements="121" complexity="0" loc="80" ncloc="80" packages="2" files="7" classes="7"/>
+    <package name="src">
+      <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+      <file name="App.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\App.js">
+        <metrics statements="1" coveredstatements="1" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
+        <line num="13" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.pages">
+      <metrics statements="79" coveredstatements="70" conditionals="22" coveredconditionals="22" methods="33" coveredmethods="27"/>
+      <file name="Forgotpass.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\pages\Forgotpass.js">
+        <metrics statements="9" coveredstatements="9" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+        <line num="6" count="6" type="stmt"/>
+        <line num="7" count="6" type="stmt"/>
+        <line num="9" count="6" type="stmt"/>
+        <line num="10" count="1" type="stmt"/>
+        <line num="11" count="1" type="stmt"/>
+        <line num="12" count="1" type="stmt"/>
+        <line num="15" count="6" type="stmt"/>
+        <line num="38" count="2" type="stmt"/>
+        <line num="43" count="1" type="stmt"/>
+      </file>
+      <file name="Home.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\pages\Home.js">
+        <metrics statements="5" coveredstatements="0" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="0"/>
+        <line num="6" count="0" type="stmt"/>
+        <line num="7" count="0" type="stmt"/>
+        <line num="29" count="0" type="stmt"/>
+        <line num="32" count="0" type="stmt"/>
+        <line num="33" count="0" type="stmt"/>
+      </file>
+      <file name="Login.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\pages\Login.js">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="4" coveredmethods="4"/>
+        <line num="6" count="5" type="stmt"/>
+        <line num="8" count="5" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="36" count="1" type="stmt"/>
+        <line num="39" count="1" type="stmt"/>
+      </file>
+      <file name="Main.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\pages\Main.js">
+        <metrics statements="6" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="5" coveredmethods="4"/>
+        <line num="6" count="6" type="stmt"/>
+        <line num="8" count="6" type="stmt"/>
+        <line num="31" count="1" type="stmt"/>
+        <line num="33" count="1" type="stmt"/>
+        <line num="34" count="2" type="stmt"/>
+        <line num="50" count="0" type="stmt"/>
+      </file>
+      <file name="Profile.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\pages\Profile.js">
+        <metrics statements="20" coveredstatements="17" conditionals="4" coveredconditionals="4" methods="9" coveredmethods="8"/>
+        <line num="7" count="15" type="stmt"/>
+        <line num="8" count="15" type="stmt"/>
+        <line num="16" count="15" type="stmt"/>
+        <line num="18" count="15" type="stmt"/>
+        <line num="21" count="15" type="stmt"/>
+        <line num="22" count="4" type="stmt"/>
+        <line num="23" count="4" type="stmt"/>
+        <line num="27" count="15" type="stmt"/>
+        <line num="28" count="2" type="cond" truecount="2" falsecount="0"/>
+        <line num="29" count="1" type="stmt"/>
+        <line num="32" count="2" type="stmt"/>
+        <line num="36" count="15" type="stmt"/>
+        <line num="37" count="0" type="stmt"/>
+        <line num="38" count="0" type="stmt"/>
+        <line num="39" count="0" type="stmt"/>
+        <line num="42" count="15" type="stmt"/>
+        <line num="103" count="3" type="stmt"/>
+        <line num="110" count="24" type="stmt"/>
+        <line num="114" count="2" type="stmt"/>
+        <line num="125" count="1" type="stmt"/>
+      </file>
+      <file name="Register.js" path="C:\Users\sonik\OneDrive\Documents\git_workspace\Sportify\src\pages\Register.js">
+        <metrics statements="34" coveredstatements="34" conditionals="18" coveredconditionals="18" methods="7" coveredmethods="7"/>
+        <line num="5" count="15" type="stmt"/>
+        <line num="6" count="15" type="stmt"/>
+        <line num="7" count="15" type="stmt"/>
+        <line num="8" count="15" type="stmt"/>
+        <line num="9" count="15" type="stmt"/>
+        <line num="10" count="15" type="stmt"/>
+        <line num="11" count="15" type="stmt"/>
+        <line num="13" count="15" type="stmt"/>
+        <line num="14" count="3" type="stmt"/>
+        <line num="15" count="3" type="stmt"/>
+        <line num="17" count="15" type="stmt"/>
+        <line num="18" count="3" type="stmt"/>
+        <line num="19" count="3" type="stmt"/>
+        <line num="22" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="23" count="1" type="stmt"/>
+        <line num="25" count="2" type="stmt"/>
+        <line num="28" count="15" type="stmt"/>
+        <line num="30" count="4" type="stmt"/>
+        <line num="31" count="4" type="stmt"/>
+        <line num="33" count="15" type="stmt"/>
+        <line num="34" count="4" type="stmt"/>
+        <line num="35" count="4" type="stmt"/>
+        <line num="37" count="4" type="cond" truecount="2" falsecount="0"/>
+        <line num="38" count="1" type="stmt"/>
+        <line num="42" count="3" type="stmt"/>
+        <line num="47" count="15" type="stmt"/>
+        <line num="48" count="3" type="stmt"/>
+        <line num="49" count="3" type="stmt"/>
+        <line num="51" count="3" type="cond" truecount="2" falsecount="0"/>
+        <line num="52" count="1" type="stmt"/>
+        <line num="54" count="2" type="stmt"/>
+        <line num="58" count="15" type="cond" truecount="6" falsecount="0"/>
+        <line num="61" count="15" type="stmt"/>
+        <line num="129" count="1" type="stmt"/>
+      </file>
+    </package>
+  </project>
+</coverage>

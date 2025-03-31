@@ -1,20 +1,53 @@
-import React from "react"
+import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import "./Main.css"
 
 export default function Home() {
     const navigate = useNavigate();
+    const [events, setEvents] = useState([]);
+
+    useEffect(() => {
+        // Load events from localStorage
+        const storedEvents = JSON.parse(localStorage.getItem('events') || '[]');
+        setEvents(storedEvents);
+    }, []); // Empty dependency array means this runs once on mount
+
+    const handleJoinTeam = (eventId) => {
+        // TODO: Implement join team functionality
+        console.log('Joining team for event:', eventId);
+    };
+
+    const handleViewEvent = (eventId) => {
+        // TODO: Implement view event functionality
+        console.log('Viewing event:', eventId);
+        // navigate(`/event/${eventId}`); // Future implementation
+    };
+
     return (
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-            <nav style={{ background: 'black', height: '60px', display: 'flex', padding: '0px', flexDirection: 'row' }} className="navbar">
+        <div style={{ 
+            minHeight: "100vh", 
+            display: "flex", 
+            flexDirection: "column",
+            backgroundImage: "url('/sports.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed" // This ensures the background stays fixed while scrolling
+        }}>
+            <nav style={{ 
+                background: 'black', 
+                height: '60px', 
+                display: 'flex', 
+                padding: '0px', 
+                flexDirection: 'row' 
+            }} className="navbar">
                 <div style={{
                     display: 'flex',
                     justifyContent: 'center',
                     alignItems: 'center',
-                    width: '40%', // Ensures full width
-                    backgroundColor: 'black', // Debugging
+                    width: '40%',
+                    backgroundColor: 'black',
                 }}>
-                    <img style={{ width: "50px", paddingRight: "10px" }} src="/iconmain.png" />
+                    <img style={{ width: "50px", paddingRight: "10px" }} src="/iconmain.png" alt={"sportify"} />
                     <p style={{
                         margin: '0',
                         padding: '0',
@@ -27,44 +60,97 @@ export default function Home() {
                 </div>
                 <div style={{ flex: 2, display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }} className="flex">
                     <div style={{ flex: 3, height: '100%', width: '100%' }}><button className="button" onClick={() => navigate("/Home")}>Home</button></div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button">Contact</button></div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => navigate("/Find")}>Find</button></div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button">Friends</button></div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => navigate("/Profile")}>Profile</button></div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}>
+                        <button 
+                            className="button" 
+                            onClick={() => navigate("/create-event")}
+                            style={{ 
+                                fontSize: '24px', 
+                                fontWeight: 'bold',
+                                padding: '0 20px'
+                            }}
+                        >
+                            +
+                        </button>
+                    </div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => navigate("/login")}>Sign Out</button></div>
                 </div>
             </nav>
             <div style={{
-                flex: 1,
                 display: "flex",
-                backgroundImage: "url('/sports.jpg')", backgroundSize: "cover",
-                backgroundPosition: "center",
-                height: "100%", // Full screen height
-                width: "100%"
-            }}> <div style={{ flex: 2, backgroundColor: 'black', opacity: "80%", color: "white", height: '200px', margin: "50px" ,width: "1000px" }}>
-                    <h1 style={{ fontSize: "20px", paddingTop: "20px", margin:"0px" }}>Come join us for a basketball game!</h1>
-                    <p style={{margin:"0px" }}><i>12th Feb, 2025 || Time: 5:00 pm</i></p>
-                    <p style={{margin:"0px" }}>Location: Recsports, Gainesville, FL</p>
-                    <button id="but5" style={{ margin:"20px",padding: "5px 5px", fontSize: "15px" }} > Join Team </button>
-                </div>
-                <div style={{ flex: 2, backgroundColor: 'black', opacity: "80%", color: "white", height: '200px', margin: "50px" }}>
-                    <h1 style={{ fontSize: "20px", paddingTop: "20px", margin:"0px" }}>Who's in for some beach tennis?</h1>
-                    <p style={{margin:"0px" }}><i>15th Feb, 2025 || Time: 10:00 am</i></p>
-                    <p style={{margin:"0px" }}>Location: paul beach, St. Augustine, FL</p>
-                    <button id="but5" style={{ margin:"20px",padding: "5px 5px", fontSize: "15px" }} > Join Team </button>
-                </div>
-                <div style={{flex: 2, backgroundColor: 'black', opacity: "80%", color: "white", height: '200px', margin: "50px" }}>
-                    <h1 style={{ fontSize: "20px", paddingTop: "20px", margin:"0px" }}>Soccer lovers, this is your time to shine!</h1>
-                    <p style={{margin:"0px" }}><i>16th Feb, 2025 || Time: 8:00 pm</i></p>
-                    <p style={{margin:"0px" }}>Location: Recsports, Gainesville, FL</p>
-                    <button id="but5" style={{ margin:"20px",padding: "5px 5px", fontSize: "15px" }} > Join Team </button>
-                </div>
-                <div style={{flex: 2, backgroundColor: 'black', opacity: "80%", color: "white", height: '200px', margin: "50px" }}>
-                    <h1 style={{ fontSize: "20px", paddingTop: "20px", margin:"0px" }}>Lets play Soccer!</h1>
-                    <p style={{margin:"0px" }}><i>16th Feb, 2025 || Time: 10:00 pm</i></p>
-                    <p style={{margin:"0px" }}>Location: deviant park, Jacksonville, FL</p>
-
-                    <button id="but5" style={{ margin:"20px",padding: "5px 5px", fontSize: "15px" }} > Join Team </button>
-                </div>
+                flexWrap: "wrap",
+                padding: "20px",
+                gap: "20px",
+                alignItems: "flex-start",
+                minHeight: "calc(100vh - 60px)" // Subtract nav height from viewport height
+            }}>
+                {/* Map through events array to display each event */}
+                {events.map((event) => (
+                    <div 
+                        key={event.id}
+                        style={{ 
+                            flex: "0 1 calc(25% - 20px)",
+                            maxWidth: "300px",
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            color: "white",
+                            height: "fit-content",
+                            padding: "15px",
+                            borderRadius: "8px",
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "space-between"
+                        }}
+                    >
+                        <div>
+                            <h1 style={{ fontSize: "20px", margin: "0 0 8px 0" }}>{event.title}</h1>
+                            <p style={{ margin: "4px 0", fontSize: "14px" }}><i>{new Date(event.event_date).toLocaleString()}</i></p>
+                            <p style={{ margin: "4px 0", fontSize: "14px" }}>Sport: {event.sport}</p>
+                            <p style={{ margin: "4px 0", fontSize: "14px" }}>Location: {event.location_name}</p>
+                            <p style={{ margin: "4px 0", fontSize: "14px" }}>Max Players: {event.max_players}</p>
+                            <p style={{ margin: "4px 0", fontSize: "14px" }}>Description: {event.description}</p>
+                        </div>
+                        
+                        <div style={{ 
+                            display: "flex", 
+                            gap: "8px",
+                            marginTop: "12px"
+                        }}>
+                            <button
+                                onClick={() => handleJoinTeam(event.id)}
+                                style={{
+                                    padding: "6px 12px",
+                                    backgroundColor: "#4CAF50",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    flex: 1,
+                                    fontSize: "13px"
+                                }}
+                            >
+                                Join Team
+                            </button>
+                            <button
+                                onClick={() => handleViewEvent(event.id)}
+                                style={{
+                                    padding: "6px 12px",
+                                    backgroundColor: "#2196F3",
+                                    color: "white",
+                                    border: "none",
+                                    borderRadius: "4px",
+                                    cursor: "pointer",
+                                    flex: 1,
+                                    fontSize: "13px"
+                                }}
+                            >
+                                View Details
+                            </button>
+                        </div>
+                    </div>
+                ))}
             </div>
         </div>
     );

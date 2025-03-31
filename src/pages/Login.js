@@ -1,9 +1,31 @@
-import React from "react";
+
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"; // Make sure to create this CSS file for styling
+import { loginUser } from "../api"; // Import API function
 
 export default function Login() {
     const navigate = useNavigate();
+    const [formData, setFormData] = useState({ email: "", password: "" });
+    const [error, setError] = useState("");
+
+    const handleChange = (e) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const result = await loginUser(formData.email, formData.password);
+
+        if (result.error) {
+            setError(result.error);
+        } else {
+            localStorage.setItem("token", result.data.token); // Save token in localStorage
+            alert("Login successful!");
+            navigate("/profile");
+        }
+    };
+
 
     return (
         <div className="login-container">
@@ -21,17 +43,18 @@ export default function Login() {
                 <div style={{ flex: 1, }} className="login-right">
                     <div className="login-box">
                         <h2>Sign in</h2>
-
+                        {error && <p className="error">{error}</p>}
+                        <form onSubmit={handleSubmit}>
                         <label>Email</label>
-                        <input type="email" placeholder="enter email" />
+                        <input type="email" placeholder="enter email" name="email" required onChange={handleChange}/>
 
                         <label>Password</label>
-                        <input type="password" placeholder="Password" />
+                        <input type="password" placeholder="Password" name="password" required onChange={handleChange}/>
 
-                        <button className="login-button" onClick={() => navigate("/home")}>
+                        <button type ="submit" className="login-button" onClick={() => navigate("/home")}>
                             login
                         </button>
-
+                        </form>
                         <p className="new-user">
                             New user? <span onClick={() => navigate("/register")}>Click here</span>
                         </p>
