@@ -34,6 +34,13 @@ func (app *application) getEventHandler(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Get the authenticated user
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedResponse(w, r)
+		return
+	}
+
 	// Get event details
 	event, err := app.store.Events.GetByID(r.Context(), eventID)
 	if err != nil {
@@ -161,6 +168,13 @@ func (app *application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Get the authenticated user
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedResponse(w, r)
+		return
+	}
+
 	// Handle payload
 	var payload UpdateEventPayload
 	if err := readJSON(w, r, &payload); err != nil {
@@ -185,8 +199,7 @@ func (app *application) updateEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	// Get the authenticated user
-	user := getUserFromContext(r)
+	// Check if user is the event owner
 	if user.ID != event.EventOwner {
 		app.forbiddenResponse(w, r)
 		return
@@ -252,6 +265,13 @@ func (app *application) deleteEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Get the authenticated user
+	user := getUserFromContext(r)
+	if user == nil {
+		app.unauthorizedResponse(w, r)
+		return
+	}
+
 	event, err := app.store.Events.GetByID(r.Context(), eventID)
 	if err != nil {
 		if err == store.ErrNotFound {
@@ -262,7 +282,7 @@ func (app *application) deleteEventHandler(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	user := getUserFromContext(r)
+	// Check if user is the event owner
 	if user.ID != event.EventOwner {
 		app.forbiddenResponse(w, r)
 		return

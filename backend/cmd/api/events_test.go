@@ -126,3 +126,191 @@ func TestCreateEventHandler(t *testing.T) {
 		})
 	}
 }
+
+func TestGetEventHandler(t *testing.T) {
+	app := newTestApplication()
+
+	tests := []struct {
+		name           string
+		eventID        string
+		setupAuth      func(*http.Request)
+		expectedStatus int
+	}{
+		{
+			name:    "valid event retrieval",
+			eventID: "1",
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+				user := &store.User{ID: 1}
+				ctx := context.WithValue(r.Context(), userCtx, user)
+				*r = *r.WithContext(ctx)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:    "invalid event ID",
+			eventID: "invalid",
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+				user := &store.User{ID: 1}
+				ctx := context.WithValue(r.Context(), userCtx, user)
+				*r = *r.WithContext(ctx)
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:           "unauthorized",
+			eventID:        "1",
+			setupAuth:      func(r *http.Request) {},
+			expectedStatus: http.StatusUnauthorized,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("GET", "/events/"+tt.eventID, nil)
+			tt.setupAuth(req)
+
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("id", tt.eventID)
+			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+			w := httptest.NewRecorder()
+			app.getEventHandler(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+		})
+	}
+}
+
+func TestUpdateEventHandler(t *testing.T) {
+	app := newTestApplication()
+
+	tests := []struct {
+		name           string
+		eventID        string
+		payload        UpdateEventPayload
+		setupAuth      func(*http.Request)
+		expectedStatus int
+	}{
+		{
+			name:    "valid event update",
+			eventID: "1",
+			payload: UpdateEventPayload{
+				Sport:        stringPtr("Basketball"),
+				MaxPlayers:   intPtr(15),
+				LocationName: stringPtr("New Location"),
+			},
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+				user := &store.User{ID: 1}
+				ctx := context.WithValue(r.Context(), userCtx, user)
+				*r = *r.WithContext(ctx)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:    "unauthorized",
+			eventID: "1",
+			payload: UpdateEventPayload{
+				Sport:        stringPtr("Basketball"),
+				MaxPlayers:   intPtr(15),
+				LocationName: stringPtr("New Location"),
+			},
+			setupAuth:      func(r *http.Request) {},
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:    "not owner",
+			eventID: "1",
+			payload: UpdateEventPayload{
+				Sport:        stringPtr("Basketball"),
+				MaxPlayers:   intPtr(15),
+				LocationName: stringPtr("New Location"),
+			},
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+				user := &store.User{ID: 2} // Different user ID
+				ctx := context.WithValue(r.Context(), userCtx, user)
+				*r = *r.WithContext(ctx)
+			},
+			expectedStatus: http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			body, err := json.Marshal(tt.payload)
+			assert.NoError(t, err)
+
+			req := httptest.NewRequest("PUT", "/events/"+tt.eventID, bytes.NewBuffer(body))
+			req.Header.Set("Content-Type", "application/json")
+			tt.setupAuth(req)
+
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("id", tt.eventID)
+			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+			w := httptest.NewRecorder()
+			app.updateEventHandler(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+		})
+	}
+}
+
+func TestDeleteEventHandler(t *testing.T) {
+	app := newTestApplication()
+
+	tests := []struct {
+		name           string
+		eventID        string
+		setupAuth      func(*http.Request)
+		expectedStatus int
+	}{
+		{
+			name:    "valid event deletion",
+			eventID: "1",
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+				user := &store.User{ID: 1}
+				ctx := context.WithValue(r.Context(), userCtx, user)
+				*r = *r.WithContext(ctx)
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "unauthorized",
+			eventID:        "1",
+			setupAuth:      func(r *http.Request) {},
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
+			name:    "not owner",
+			eventID: "1",
+			setupAuth: func(r *http.Request) {
+				r.Header.Set("Authorization", "Bearer test-token")
+				user := &store.User{ID: 2}
+				ctx := context.WithValue(r.Context(), userCtx, user)
+				*r = *r.WithContext(ctx)
+			},
+			expectedStatus: http.StatusForbidden,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			req := httptest.NewRequest("DELETE", "/events/"+tt.eventID, nil)
+			tt.setupAuth(req)
+
+			rctx := chi.NewRouteContext()
+			rctx.URLParams.Add("id", tt.eventID)
+			req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+			w := httptest.NewRecorder()
+			app.deleteEventHandler(w, req)
+
+			assert.Equal(t, tt.expectedStatus, w.Code)
+		})
+	}
+}

@@ -113,12 +113,21 @@ func (m *mockEventStore) Delete(ctx context.Context, id int64) error {
 
 func (m *mockEventStore) Join(ctx context.Context, eventID, userID int64) error {
 	// Mock joining an event
+	args := m.Called(ctx, eventID, userID)
+	if args.Get(0) != nil {
+		return args.Get(0).(error)
+	}
 	return nil
 }
 
 func (m *mockEventStore) Leave(ctx context.Context, eventID, userID int64) error {
 	// Mock leaving an event
 	return nil
+}
+
+func (m *mockEventStore) GetAllWithFilter(ctx context.Context, filter *store.EventFilter) ([]*store.Event, error) {
+	// Mock getting all events with filter
+	return []*store.Event{}, nil
 }
 
 // Mock Dependencies
