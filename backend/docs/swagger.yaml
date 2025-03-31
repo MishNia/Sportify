@@ -26,6 +26,35 @@ definitions:
     - max_players
     - sport
     type: object
+  main.EventFilterPayload:
+    properties:
+      after_date:
+        description: RFC3339 string
+        type: string
+      before_date:
+        description: RFC3339 string
+        type: string
+      event_owner:
+        type: integer
+      id:
+        type: integer
+      is_full:
+        type: boolean
+      location_name:
+        type: string
+      max_players:
+        type: integer
+      order:
+        description: asc, desc
+        type: string
+      sort_by:
+        description: event_datetime, created_at, etc.
+        type: string
+      sports:
+        items:
+          type: string
+        type: array
+    type: object
   main.LoginPayload:
     properties:
       email:
@@ -235,48 +264,15 @@ paths:
     get:
       consumes:
       - application/json
-      description: Returns a list of events filtered by query params
+      description: Returns a list of events filtered by criteria provided in the request
+        body
       parameters:
-      - description: Filter by exact event ID
-        in: query
-        name: id
-        type: integer
-      - description: Comma-separated list of sports
-        in: query
-        name: sport
-        type: string
-      - description: Filter by max players
-        in: query
-        name: max_players
-        type: integer
-      - description: Filter by event owner
-        in: query
-        name: event_owner
-        type: integer
-      - description: Filter by event full status
-        in: query
-        name: is_full
-        type: boolean
-      - description: Filter events after this datetime (RFC3339)
-        in: query
-        name: after_date
-        type: string
-      - description: Filter events before this datetime (RFC3339)
-        in: query
-        name: before_date
-        type: string
-      - description: Filter by location name (partial match)
-        in: query
-        name: location_name
-        type: string
-      - description: 'Sort by field: event_datetime, created_at, etc'
-        in: query
-        name: sort_by
-        type: string
-      - description: asc or desc
-        in: query
-        name: order
-        type: string
+      - description: Event filtering criteria
+        in: body
+        name: filter
+        required: true
+        schema:
+          $ref: '#/definitions/main.EventFilterPayload'
       produces:
       - application/json
       responses:

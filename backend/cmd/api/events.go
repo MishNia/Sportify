@@ -403,116 +403,82 @@ func (app *application) leaveEventHandler(w http.ResponseWriter, r *http.Request
 	}
 }
 
+type EventFilterPayload struct {
+	ID           *int64   `json:"id"`
+	Sports       []string `json:"sports"`
+	MaxPlayers   *int     `json:"max_players"`
+	EventOwner   *int64   `json:"event_owner"`
+	IsFull       *bool    `json:"is_full"`
+	AfterDate    *string  `json:"after_date"`  // RFC3339 string
+	BeforeDate   *string  `json:"before_date"` // RFC3339 string
+	LocationName *string  `json:"location_name"`
+	SortBy       *string  `json:"sort_by"` // event_datetime, created_at, etc.
+	Order        *string  `json:"order"`   // asc, desc
+}
+
 // getAllEventsHandler godoc
 //
 //	@Summary		Get all events with filters
-//	@Description	Returns a list of events filtered by query params
+//	@Description	Returns a list of events filtered by criteria provided in the request body
 //	@Tags			events
 //	@Accept			json
 //	@Produce		json
-//	@Param			id				query		int		false	"Filter by exact event ID"
-//	@Param			sport			query		string	false	"Comma-separated list of sports"
-//	@Param			max_players		query		int		false	"Filter by max players"
-//	@Param			event_owner		query		int		false	"Filter by event owner"
-//	@Param			is_full			query		bool	false	"Filter by event full status"
-//	@Param			after_date		query		string	false	"Filter events after this datetime (RFC3339)"
-//	@Param			before_date		query		string	false	"Filter events before this datetime (RFC3339)"
-//	@Param			location_name	query		string	false	"Filter by location name (partial match)"
-//	@Param			sort_by			query		string	false	"Sort by field: event_datetime, created_at, etc"
-//	@Param			order			query		string	false	"asc or desc"
-//	@Success		200				{array}		store.Event
-//	@Failure		400				{object}	error
-//	@Failure		500				{object}	error
+//	@Param			filter	body		EventFilterPayload	true	"Event filtering criteria"
+//	@Success		200		{array}		store.Event
+//	@Failure		400		{object}	error
+//	@Failure		500		{object}	error
 //	@Security		ApiKeyAuth
 //	@Router			/events [get]
 func (app *application) getAllEventsHandler(w http.ResponseWriter, r *http.Request) {
-	q := r.URL.Query()
-	filter := &store.EventFilter{}
-
-	// Parse ID
-	if idStr := q.Get("id"); idStr != "" {
-		if id, err := strconv.ParseInt(idStr, 10, 64); err == nil {
-			filter.ID = &id
-		} else {
-			app.badRequestResponse(w, r, errors.New("invalid id"))
-			return
-		}
+	var payload EventFilterPayload
+	if err := readJSON(w, r, &payload); err != nil {
+		app.badRequestResponse(w, r, err)
+		return
 	}
 
-	// Parse sport (comma-separated)
-	if sportsStr := q.Get("sport"); sportsStr != "" {
-		sports := strings.Split(sportsStr, ",")
-		filter.Sports = sports
+	filter := &store.EventFilter{
+		ID:           payload.ID,
+		Sports:       payload.Sports,
+		MaxPlayers:   payload.MaxPlayers,
+		EventOwner:   payload.EventOwner,
+		IsFull:       payload.IsFull,
+		LocationName: payload.LocationName,
 	}
 
-	// max_players
-	if mpStr := q.Get("max_players"); mpStr != "" {
-		if mp, err := strconv.Atoi(mpStr); err == nil {
-			filter.MaxPlayers = &mp
-		} else {
-			app.badRequestResponse(w, r, errors.New("invalid max_players"))
-			return
-		}
-	}
-
-	// event_owner
-	if eoStr := q.Get("event_owner"); eoStr != "" {
-		if eo, err := strconv.ParseInt(eoStr, 10, 64); err == nil {
-			filter.EventOwner = &eo
-		} else {
-			app.badRequestResponse(w, r, errors.New("invalid event_owner"))
-			return
-		}
-	}
-
-	// is_full
-	if isFullStr := q.Get("is_full"); isFullStr != "" {
-		if isFull, err := strconv.ParseBool(isFullStr); err == nil {
-			filter.IsFull = &isFull
-		} else {
-			app.badRequestResponse(w, r, errors.New("invalid is_full"))
-			return
-		}
-	}
-
-	// after_date
-	if afterStr := q.Get("after_date"); afterStr != "" {
-		if t, err := time.Parse(time.RFC3339, afterStr); err == nil {
-			filter.AfterDate = &t
-		} else {
+	// Parse and convert dates
+	if payload.AfterDate != nil {
+		t, err := time.Parse(time.RFC3339, *payload.AfterDate)
+		if err != nil {
 			app.badRequestResponse(w, r, errors.New("invalid after_date"))
 			return
 		}
+		filter.AfterDate = &t
 	}
 
-	// before_date
-	if beforeStr := q.Get("before_date"); beforeStr != "" {
-		if t, err := time.Parse(time.RFC3339, beforeStr); err == nil {
-			filter.BeforeDate = &t
-		} else {
+	if payload.BeforeDate != nil {
+		t, err := time.Parse(time.RFC3339, *payload.BeforeDate)
+		if err != nil {
 			app.badRequestResponse(w, r, errors.New("invalid before_date"))
 			return
 		}
+		filter.BeforeDate = &t
 	}
 
-	// location_name
-	if loc := q.Get("location_name"); loc != "" {
-		filter.LocationName = &loc
+	// Validate sort options
+	if payload.SortBy != nil {
+		switch *payload.SortBy {
+		case "event_datetime", "created_at", "registered_count":
+			filter.SortBy = *payload.SortBy
+		}
+	}
+	if payload.Order != nil {
+		order := strings.ToLower(*payload.Order)
+		if order == "desc" || order == "asc" {
+			filter.Order = order
+		}
 	}
 
-	// sort_by
-	sortBy := q.Get("sort_by")
-	if sortBy == "event_datetime" || sortBy == "created_at" || sortBy == "registered_count" {
-		filter.SortBy = sortBy
-	}
-
-	// order
-	order := strings.ToLower(q.Get("order"))
-	if order == "desc" || order == "asc" {
-		filter.Order = order
-	}
-
-	// Defaults if not set
+	// Apply defaults
 	if filter.SortBy == "" {
 		filter.SortBy = "created_at"
 	}
@@ -520,14 +486,13 @@ func (app *application) getAllEventsHandler(w http.ResponseWriter, r *http.Reque
 		filter.Order = "asc"
 	}
 
-	// Call store to get filtered events
+	// Fetch events
 	events, err := app.store.Events.GetAllWithFilter(r.Context(), filter)
 	if err != nil {
 		app.internalServerError(w, r, err)
 		return
 	}
 
-	// Return JSON response
 	if err := app.jsonResponse(w, http.StatusOK, events); err != nil {
 		app.internalServerError(w, r, err)
 	}

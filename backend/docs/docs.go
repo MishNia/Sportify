@@ -115,7 +115,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Returns a list of events filtered by query params",
+                "description": "Returns a list of events filtered by criteria provided in the request body",
                 "consumes": [
                     "application/json"
                 ],
@@ -128,64 +128,13 @@ const docTemplate = `{
                 "summary": "Get all events with filters",
                 "parameters": [
                     {
-                        "type": "integer",
-                        "description": "Filter by exact event ID",
-                        "name": "id",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Comma-separated list of sports",
-                        "name": "sport",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Filter by max players",
-                        "name": "max_players",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Filter by event owner",
-                        "name": "event_owner",
-                        "in": "query"
-                    },
-                    {
-                        "type": "boolean",
-                        "description": "Filter by event full status",
-                        "name": "is_full",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter events after this datetime (RFC3339)",
-                        "name": "after_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter events before this datetime (RFC3339)",
-                        "name": "before_date",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Filter by location name (partial match)",
-                        "name": "location_name",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "Sort by field: event_datetime, created_at, etc",
-                        "name": "sort_by",
-                        "in": "query"
-                    },
-                    {
-                        "type": "string",
-                        "description": "asc or desc",
-                        "name": "order",
-                        "in": "query"
+                        "description": "Event filtering criteria",
+                        "name": "filter",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/main.EventFilterPayload"
+                        }
                     }
                 ],
                 "responses": {
@@ -742,6 +691,48 @@ const docTemplate = `{
                 },
                 "title": {
                     "type": "string"
+                }
+            }
+        },
+        "main.EventFilterPayload": {
+            "type": "object",
+            "properties": {
+                "after_date": {
+                    "description": "RFC3339 string",
+                    "type": "string"
+                },
+                "before_date": {
+                    "description": "RFC3339 string",
+                    "type": "string"
+                },
+                "event_owner": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "is_full": {
+                    "type": "boolean"
+                },
+                "location_name": {
+                    "type": "string"
+                },
+                "max_players": {
+                    "type": "integer"
+                },
+                "order": {
+                    "description": "asc, desc",
+                    "type": "string"
+                },
+                "sort_by": {
+                    "description": "event_datetime, created_at, etc.",
+                    "type": "string"
+                },
+                "sports": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
