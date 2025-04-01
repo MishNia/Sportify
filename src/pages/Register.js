@@ -58,6 +58,11 @@ export default function Register() {
   const isDisabled = !email || emailError ||
     !password || passwordError ||
     !confirmPassword || confirmPasswordError;
+
+  const handleGoogleSignIn = () => {
+    window.location.href = 'http://localhost:8080/v1/auth/google';
+  };
+
   return (
     <div style={{
       backgroundImage: "url('/sports.jpg')", backgroundSize: "cover",  backgroundPosition: 'center',
@@ -125,8 +130,54 @@ export default function Register() {
 
 
             </form>
+
+            {/* Google Sign-In Button */}
+            <div style={{ marginTop: "20px", textAlign: "center" }}>
+              <button
+                onClick={handleGoogleSignIn}
+                style={{
+                  padding: "10px",
+                  width: "300px",
+                  borderRadius: "5px",
+                  backgroundColor: "#4285f4",
+                  color: "white",
+                  border: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <img 
+                  src="https://www.google.com/favicon.ico" 
+                  alt="Google" 
+                  style={{ width: "20px", height: "20px" }}
+                />
+                Sign in with Google
+              </button>
+            </div>
+
             {/* Register Button */}
-            <div><button className="button" style={{padding:"10px", width:"300px", borderRadius:"5px"}} disabled={isDisabled} onClick={(e) => { e.preventDefault(); navigate("/Profile") }}>Register</button></div>
+            <div style={{ marginTop: "20px" }}>
+              <button 
+                className="button" 
+                style={{
+                  padding: "10px", 
+                  width: "300px", 
+                  borderRadius: "5px",
+                  backgroundColor: "#000",
+                  color: "white",
+                  border: "none",
+                  cursor: isDisabled ? "not-allowed" : "pointer",
+                  opacity: isDisabled ? 0.5 : 1
+                }} 
+                disabled={isDisabled} 
+                onClick={(e) => { e.preventDefault(); navigate("/Profile") }}
+              >
+                Register
+              </button>
+            </div>
 
             {/* Login Link */}
             <p className="text-gray-600 text-sm text-center mt-4">

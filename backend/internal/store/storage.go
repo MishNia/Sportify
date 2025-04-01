@@ -18,6 +18,7 @@ type Storage struct {
 		GetByID(context.Context, int64) (*User, error)
 		GetByEmail(context.Context, string) (*User, error)
 		Create(context.Context, *User) error
+		CreateOrUpdateGoogleUser(ctx context.Context, googleID, email, name string) (*User, bool, error)
 	}
 	Profile interface {
 		GetByEmail(context.Context, string) (*Profile, error)

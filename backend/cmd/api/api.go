@@ -11,6 +11,7 @@ import (
 	"github.com/MishNia/Sportify.git/internal/store"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/go-chi/cors"
 	"github.com/go-playground/validator/v10"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
@@ -51,6 +52,16 @@ type dbConfig struct {
 func (app *application) mount() http.Handler {
 	r := chi.NewRouter()
 
+	// CORS middleware
+	r.Use(cors.Handler(cors.Options{
+		AllowedOrigins:   []string{"http://localhost:3000"},
+		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Link"},
+		AllowCredentials: true,
+		MaxAge:           300,
+	}))
+
 	// A good base middleware stack
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -73,6 +84,8 @@ func (app *application) mount() http.Handler {
 		r.Route("/auth", func(r chi.Router) {
 			r.Post("/signup", app.registerUserHandler)
 			r.Post("/login", app.userLoginHandler)
+			r.Get("/google", app.googleAuthHandler)
+			r.Get("/google/callback", app.googleCallbackHandler)
 		})
 
 		r.Route("/profile", func(r chi.Router) {

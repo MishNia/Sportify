@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -19,6 +20,9 @@ type User struct {
 	Email     string   `json:"email"`
 	Password  password `json:"-"` //makes sure we don't send password in responses
 	CreatedAt string   `json:"created_at"`
+	UpdatedAt string   `json:"updated_at"`
+	GoogleID  string   `json:"google_id"`
+	Name      string   `json:"name"`
 }
 
 type password struct {
@@ -40,6 +44,10 @@ func (p *password) Set(text string) error {
 
 func (p *password) Compare(text string) error {
 	return bcrypt.CompareHashAndPassword(p.hash, []byte(text))
+}
+
+func (p *password) HasPassword() bool {
+	return len(p.hash) > 0
 }
 
 type UserStore struct {
@@ -111,7 +119,7 @@ func (s *UserStore) GetByID(ctx context.Context, userID int64) (*User, error) {
 
 func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error) {
 	query := `
-		SELECT id, email, password, created_at FROM users
+		SELECT id, email, password, created_at, google_id FROM users
 		WHERE email = $1
 	`
 
@@ -124,6 +132,7 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 		&user.Email,
 		&user.Password.hash,
 		&user.CreatedAt,
+		&user.GoogleID,
 	)
 	if err != nil {
 		switch err {
@@ -135,4 +144,72 @@ func (s *UserStore) GetByEmail(ctx context.Context, email string) (*User, error)
 	}
 
 	return user, nil
+}
+
+// CreateOrUpdateGoogleUser creates a new user from Google OAuth info or updates an existing one
+func (s *UserStore) CreateOrUpdateGoogleUser(ctx context.Context, googleID, email, name string) (*User, bool, error) {
+	var user *User
+	var err error
+
+	// Check if user exists by Google ID
+	user, err = s.GetByGoogleID(ctx, googleID)
+	if err == nil {
+		return user, false, nil
+	}
+
+	// If user doesn't exist, check if email exists
+	user, err = s.GetByEmail(ctx, email)
+	if err == nil {
+		// Update existing user with Google ID
+		query := `
+			UPDATE users 
+			SET google_id = $1, updated_at = NOW()
+			WHERE id = $2
+			RETURNING id, email, name, google_id, created_at, updated_at`
+
+		err = s.db.QueryRowContext(ctx, query, googleID, user.ID).Scan(
+			&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.CreatedAt, &user.UpdatedAt,
+		)
+		if err != nil {
+			return nil, false, fmt.Errorf("failed to update user with Google ID: %v", err)
+		}
+		return user, false, nil
+	}
+
+	// Create new user
+	query := `
+		INSERT INTO users (email, name, google_id)
+		VALUES ($1, $2, $3)
+		RETURNING id, email, name, google_id, created_at, updated_at`
+
+	user = &User{}
+	err = s.db.QueryRowContext(ctx, query, email, name, googleID).Scan(
+		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err != nil {
+		return nil, false, fmt.Errorf("failed to create user: %v", err)
+	}
+
+	return user, true, nil
+}
+
+// GetByGoogleID retrieves a user by their Google ID
+func (s *UserStore) GetByGoogleID(ctx context.Context, googleID string) (*User, error) {
+	query := `
+		SELECT id, email, name, google_id, created_at, updated_at
+		FROM users
+		WHERE google_id = $1`
+
+	var user User
+	err := s.db.QueryRowContext(ctx, query, googleID).Scan(
+		&user.ID, &user.Email, &user.Name, &user.GoogleID, &user.CreatedAt, &user.UpdatedAt,
+	)
+	if err == sql.ErrNoRows {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, fmt.Errorf("failed to get user by Google ID: %v", err)
+	}
+
+	return &user, nil
 }

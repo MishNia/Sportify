@@ -2,14 +2,17 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
+	"github.com/MishNia/Sportify.git/internal/auth"
 	"github.com/MishNia/Sportify.git/internal/store"
 	"github.com/golang-jwt/jwt/v5"
 )
 
 type userKey string
+
 const userCtx userKey = "user"
 
 var (
@@ -137,6 +140,12 @@ func (app *application) userLoginHandler(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
+	// If user has a Google ID but no password, they should use Google Sign-In
+	if user.GoogleID != "" && !user.Password.HasPassword() {
+		app.badRequestResponse(w, r, errors.New("this account is linked to Google. Please use Google Sign-In"))
+		return
+	}
+
 	// verify password of the user
 	if err := user.Password.Compare(payload.Password); err != nil {
 		app.unauthorizedErrorResponse(w, r, err)
@@ -176,4 +185,52 @@ func (app *application) createJwtToken(userID int64) (string, error) {
 func getUserFromContext(r *http.Request) *store.User {
 	user, _ := r.Context().Value(userCtx).(*store.User)
 	return user
+}
+
+func (app *application) googleAuthHandler(w http.ResponseWriter, r *http.Request) {
+	url := auth.GetGoogleAuthURL()
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+}
+
+func (app *application) googleCallbackHandler(w http.ResponseWriter, r *http.Request) {
+	code := r.URL.Query().Get("code")
+	if code == "" {
+		app.badRequestResponse(w, r, errors.New("code is required"))
+		return
+	}
+
+	app.logger.Infow("Received Google OAuth callback", "code", code)
+
+	userInfo, err := auth.GetGoogleUserInfo(code)
+	if err != nil {
+		app.logger.Errorw("Failed to get Google user info", "error", err)
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	app.logger.Infow("Got Google user info", "email", userInfo.Email, "name", userInfo.Name)
+
+	// Create or update user in our database
+	user, isNewUser, err := app.store.Users.CreateOrUpdateGoogleUser(r.Context(), userInfo.ID, userInfo.Email, userInfo.Name)
+	if err != nil {
+		app.logger.Errorw("Failed to create/update Google user", "error", err)
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	app.logger.Infow("Created/updated user", "user_id", user.ID, "is_new", isNewUser)
+
+	// Generate JWT token
+	token, err := app.createJwtToken(user.ID)
+	if err != nil {
+		app.logger.Errorw("Failed to create JWT token", "error", err)
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	// Redirect back to frontend with token and isNewUser flag
+	frontendURL := "http://localhost:3000/auth/google/callback"
+	redirectURL := fmt.Sprintf("%s?token=%s&isNewUser=%v", frontendURL, token, isNewUser)
+	app.logger.Infow("Redirecting to frontend", "url", redirectURL)
+	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
 }

@@ -40,6 +40,18 @@ func (m *mockUserStore) GetByID(ctx context.Context, userID int64) (*store.User,
 	}, nil
 }
 
+func (m *mockUserStore) CreateOrUpdateGoogleUser(ctx context.Context, googleID, email, name string) (*store.User, bool, error) {
+	// Mock Google user creation/update
+	return &store.User{
+		ID:        1,
+		Email:     email,
+		Name:      name,
+		GoogleID:  googleID,
+		CreatedAt: time.Now().Format(time.RFC3339),
+		UpdatedAt: time.Now().Format(time.RFC3339),
+	}, true, nil
+}
+
 type mockProfileStore struct {
 	mock.Mock
 }
