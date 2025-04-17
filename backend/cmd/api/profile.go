@@ -25,7 +25,7 @@ import (
 func (app *application) getUserProfileHandler(w http.ResponseWriter, r *http.Request) {
 	idParam := chi.URLParam(r, "userID")
 	var userID int64
-	if idParam != "" && idParam != "0"{
+	if idParam != "" && idParam != "0" {
 		var err error
 		userID, err = strconv.ParseInt(idParam, 10, 64)
 		if err != nil {
@@ -74,7 +74,6 @@ func (app *application) getUserProfileHandler(w http.ResponseWriter, r *http.Req
 type ProfilePayload struct {
 	FirstName       string   `json:"first_name" validate:"required"`
 	LastName        string   `json:"last_name" validate:"required"`
-	Email           string   `json:"email" validate:"required,email"`
 	Age             int      `json:"age" validate:"required"`
 	Gender          string   `json:"gender" validate:"required"`
 	SportPreference []string `json:"sport_preference" validate:"required"`
@@ -111,20 +110,20 @@ func (app *application) createUserProfileHandler(w http.ResponseWriter, r *http.
 	}
 
 	log.Println("Received profile create request")
+	user := getUserFromContext(r)
+	if user.Email == "" {
+		log.Printf("User %s is not authorized to create profile", user.Email)
+		app.forbiddenResponse(w, r)
+		return
+	}
 
 	profile := &store.Profile{
-		Email:           payload.Email,
+		Email:           user.Email,
 		FirstName:       payload.FirstName,
 		LastName:        payload.LastName,
 		Age:             payload.Age,
 		Gender:          payload.Gender,
 		SportPreference: payload.SportPreference,
-	}
-	user := getUserFromContext(r)
-	if user.Email != profile.Email {
-		log.Printf("User %s is not authorized to create profile for %s", user.Email, profile.Email)
-		app.forbiddenResponse(w, r)
-		return
 	}
 
 	ctx := r.Context()
@@ -172,8 +171,8 @@ func (app *application) updateUserProfileHandler(w http.ResponseWriter, r *http.
 
 	log.Println("Received profile update request")
 	user := getUserFromContext(r)
-	if user.Email != payload.Email {
-		log.Printf("User %s is not authorized to update profile for %s", user.Email, payload.Email)
+	if user.Email == "" {
+		log.Printf("User %s is not authorized to update profile", user.Email)
 		app.forbiddenResponse(w, r)
 		return
 	}
@@ -181,10 +180,10 @@ func (app *application) updateUserProfileHandler(w http.ResponseWriter, r *http.
 	ctx := r.Context()
 
 	// Fetch existing profile
-	profile, err := app.store.Profile.GetByEmail(ctx, payload.Email)
+	profile, err := app.store.Profile.GetByEmail(ctx, user.Email)
 	if err != nil {
 		if err == store.ErrNotFound {
-			log.Printf("Profile for user %s not found", payload.Email)
+			log.Printf("Profile for user %s not found", user.Email)
 			app.notFoundResponse(w, r, err)
 		} else {
 			app.internalServerError(w, r, err)
