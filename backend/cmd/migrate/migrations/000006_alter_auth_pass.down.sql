@@ -1,0 +1,2 @@
+ALTER TABLE users
+DROP CONSTRAINT users_password_or_google_id_check
