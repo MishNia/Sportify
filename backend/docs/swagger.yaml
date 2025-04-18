@@ -69,8 +69,6 @@ definitions:
     properties:
       age:
         type: integer
-      email:
-        type: string
       first_name:
         type: string
       gender:
@@ -83,7 +81,6 @@ definitions:
         type: array
     required:
     - age
-    - email
     - first_name
     - gender
     - last_name

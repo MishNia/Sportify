@@ -747,7 +747,6 @@
             "type": "object",
             "required": [
                 "age",
-                "email",
                 "first_name",
                 "gender",
                 "last_name",
@@ -756,9 +755,6 @@
             "properties": {
                 "age": {
                     "type": "integer"
-                },
-                "email": {
-                    "type": "string"
                 },
                 "first_name": {
                     "type": "string"

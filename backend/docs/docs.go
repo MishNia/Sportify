@@ -755,7 +755,6 @@ const docTemplate = `{
             "type": "object",
             "required": [
                 "age",
-                "email",
                 "first_name",
                 "gender",
                 "last_name",
@@ -764,9 +763,6 @@ const docTemplate = `{
             "properties": {
                 "age": {
                     "type": "integer"
-                },
-                "email": {
-                    "type": "string"
                 },
                 "first_name": {
                     "type": "string"
