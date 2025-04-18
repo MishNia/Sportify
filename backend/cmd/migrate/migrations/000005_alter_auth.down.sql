@@ -1,2 +1,2 @@
 ALTER TABLE users
-DROP CONSTRAINT users_google_id_unique UNIQUE (google_id);
+DROP CONSTRAINT users_google_id_unique;
