@@ -8,8 +8,7 @@ export const signupUser = async (email, password) => {
         const response = await axios.post(`${API_BASE_URL}/auth/signup`, 
             { email, password });
 
-       // localStorage.setItem("token", response.data.data);
-       // console.log("Token", localStorage.getItem("token"));
+
 
         return response.data;
     } catch (error) {
@@ -22,8 +21,7 @@ export const loginUser = async (email, password) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
 
-        //localStorage.setItem("token", response.data.data);
-       // console.log("Token", localStorage.getItem("token"));
+
 
         return response.data;
     } catch (error) {
