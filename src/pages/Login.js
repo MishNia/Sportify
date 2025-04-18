@@ -11,7 +11,7 @@ export default function Login() {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        const result = await loginUser(formData.email, formData.password);
+        const result = await loginUser(email, password);
 
         if (result.error) {
             setError(result.error);

@@ -7,6 +7,10 @@ export const signupUser = async (email, password) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/signup`, 
             { email, password });
+
+       // localStorage.setItem("token", response.data.data);
+       // console.log("Token", localStorage.getItem("token"));
+
         return response.data;
     } catch (error) {
         return { error: error.response?.data?.error || "Something went wrong" };
@@ -17,6 +21,10 @@ export const signupUser = async (email, password) => {
 export const loginUser = async (email, password) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
+
+        //localStorage.setItem("token", response.data.data);
+       // console.log("Token", localStorage.getItem("token"));
+
         return response.data;
     } catch (error) {
         return { error: error.response?.data?.error || "Invalid credentials" };
@@ -26,8 +34,14 @@ export const loginUser = async (email, password) => {
 // Create Profile API Call
 export const createProfile = async (profileData) => {
     try {
+        const token = localStorage.getItem("token");
+
+        const headers = {
+            Authorization: `Bearer ${token}`,
+        };
+
         const response = await axios.post(`${API_BASE_URL}/profile`,
-            profileData);
+            profileData, { headers });
         return response.data;
     } catch (error) {
         return { error: error.response?.data?.error || "Profile creation failed" };

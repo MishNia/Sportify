@@ -57,6 +57,7 @@ export default function Register() {
     if (result.error) {
       setApiError(result.error);
     } else {
+        localStorage.setItem("token", result.data);
       alert("Signup successful! Redirecting to login.");
       navigate("/Profile");
     }
