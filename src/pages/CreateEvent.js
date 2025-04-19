@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
 import { createEvent } from '../api';
-import { useAuth } from '../context/AuthContext';
 
 /**
  * CreateEvent Component
@@ -12,12 +11,11 @@ import { useAuth } from '../context/AuthContext';
 const CreateEvent = () => {
     const navigate = useNavigate();
     const autoCompleteRef = useRef(null);
-    const { userProfile } = useAuth();
 
     // Initialize form data state with empty values
     const [formData, setFormData] = useState({
         sport: "",
-        event_date: "", // This will be converted to event_datetime for the API
+        event_date: "",
         max_players: "",
         location_name: "",
         latitude: "",
@@ -107,39 +105,16 @@ const CreateEvent = () => {
         setLoading(true);
 
         try {
-            // Prepare event data for API according to the backend's expected field names
-            const eventData = {
-                sport: formData.sport,
-                // Format the date as ISO string with timezone
-                event_date: formData.event_date ? new Date(formData.event_date + ':00Z').toISOString() : null,
-                max_players: parseInt(formData.max_players, 10),
-                location_name: formData.location_name,
-                latitude: parseFloat(formData.latitude),
-                longitude: parseFloat(formData.longitude),
-                description: formData.description,
-                title: formData.title
-            };
+            // Create event using the API
+            const newEvent = await createEvent({
+                ...formData,
+                event_date: new Date(formData.event_date).toISOString()
+            });
 
-            // Log the event data being sent to API
-            console.log('Sending event data to API:', eventData);
-
-            // Call the API to create the event
-            console.log('Calling createEvent API with data:', eventData);
-            const result = await createEvent(eventData);
-            console.log('Create event API response:', result);
-
-            if (result.error) {
-                setError(result.error);
-                console.error('API error creating event:', result.error);
-            } else {
-                alert("Event created successfully!");
-                // Add a small delay to allow the backend to process the event
-                setTimeout(() => {
-                    navigate("/home");
-                }, 1000);
-            }
+            alert("Event created successfully!");
+            navigate("/home");
         } catch (err) {
-            setError("Failed to create event");
+            setError(err.message || "Failed to create event");
             console.error('Error creating event:', err);
         } finally {
             setLoading(false);

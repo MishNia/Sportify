@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signupUser, getUserProfile } from "../api"; // Import API functions
+import { signupUser } from "../api"; // Import API function
 import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
@@ -187,7 +187,6 @@ export default function Register() {
                   color: "white",
                   border: "none",
                   backgroundColor: emailError || passwordError || confirmPasswordError ? "gray" : "black",
-                  color: "white",
                   cursor: emailError || passwordError || confirmPasswordError ? "not-allowed" : "pointer",
                 }}
                 disabled={isDisabled}

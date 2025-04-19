@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"; // Make sure to create this CSS file for styling
-import { loginUser, getUserProfile } from "../api"; // Import API functions
+import { loginUser } from "../api"; // Import API function
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {

@@ -88,52 +88,98 @@ export const updateProfile = async (profileData) => {
 };
 
 // Create Event API Call
+// export const createEvent = async (eventData) => {
+//     console.log('createEvent called with data:', eventData);
+//     try {
+//         const result = await authRequest('post', '/events', eventData);
+//         console.log('createEvent response:', result);
+//         return result;
+//     } catch (error) {
+//         console.error('Error in createEvent:', error);
+//         return { error: error.message || 'Failed to create event' };
+//     }
+// };
+
+// Get All Events
+// export const getAllEvents = async (filters = {}) => {
+//     try {
+//         console.log('Calling getAllEvents with filters:', filters);
+//         console.log('API_BASE_URL:', API_BASE_URL);
+//
+//         // The backend expects a JSON body in the GET request
+//         const headers = getAuthHeaders();
+//         console.log('Auth headers:', headers);
+//
+//         // The backend expects snake_case field names
+//         console.log('Making API request to:', `${API_BASE_URL}/events`);
+//         console.log('With filters:', filters);
+//
+//         // Try using POST method which is more standard for sending a body
+//         const response = await axios.post(`${API_BASE_URL}/events`, filters, { headers });
+//
+//         console.log('API response status:', response.status);
+//         console.log('API response headers:', response.headers);
+//         console.log('getAllEvents raw result:', response.data);
+//
+//         return response.data;
+//     } catch (error) {
+//         console.error('Error in getAllEvents:', error);
+//         console.error('Error response:', error.response);
+//         console.error('Error message:', error.message);
+//
+//         if (error.response) {
+//             console.error('Status:', error.response.status);
+//             console.error('Data:', error.response.data);
+//             console.error('Headers:', error.response.headers);
+//         }
+//
+//         return { error: error.response?.data?.error || error.message || 'Failed to fetch events' };
+//     }
+// };
+
 export const createEvent = async (eventData) => {
-    console.log('createEvent called with data:', eventData);
     try {
-        const result = await authRequest('post', '/events', eventData);
-        console.log('createEvent response:', result);
-        return result;
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8080/v1/events', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify(eventData)
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to create event');
+        }
+
+        return await response.json();
     } catch (error) {
-        console.error('Error in createEvent:', error);
-        return { error: error.message || 'Failed to create event' };
+        console.error('Error creating event:', error);
+        throw error;
     }
 };
 
-// Get All Events
-export const getAllEvents = async (filters = {}) => {
+export const getEvents = async () => {
     try {
-        console.log('Calling getAllEvents with filters:', filters);
-        console.log('API_BASE_URL:', API_BASE_URL);
+        const token = localStorage.getItem('token');
+        const response = await fetch('http://localhost:8080/v1/events/all', {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
-        // The backend expects a JSON body in the GET request
-        const headers = getAuthHeaders();
-        console.log('Auth headers:', headers);
-
-        // The backend expects snake_case field names
-        console.log('Making API request to:', `${API_BASE_URL}/events`);
-        console.log('With filters:', filters);
-
-        // Try using POST method which is more standard for sending a body
-        const response = await axios.post(`${API_BASE_URL}/events`, filters, { headers });
-
-        console.log('API response status:', response.status);
-        console.log('API response headers:', response.headers);
-        console.log('getAllEvents raw result:', response.data);
-
-        return response.data;
-    } catch (error) {
-        console.error('Error in getAllEvents:', error);
-        console.error('Error response:', error.response);
-        console.error('Error message:', error.message);
-
-        if (error.response) {
-            console.error('Status:', error.response.status);
-            console.error('Data:', error.response.data);
-            console.error('Headers:', error.response.headers);
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch events');
         }
 
-        return { error: error.response?.data?.error || error.message || 'Failed to fetch events' };
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching events:', error);
+        throw error;
     }
 };
 
@@ -161,3 +207,4 @@ export const joinEvent = async (eventId) => {
 export const leaveEvent = async (eventId) => {
     return authRequest('post', `/events/${eventId}/leave`);
 };
+
