@@ -66,24 +66,24 @@ export default function Login() {
 
                         <form onSubmit={handleLogin}>
                             <label>Email</label>
-                            <input
-                                type="email"
-                                placeholder="enter email"
+                            <input 
+                                type="email" 
+                                placeholder="Enter email" 
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
 
                             <label>Password</label>
-                            <input
-                                type="password"
-                                placeholder="Password"
+                            <input 
+                                type="password" 
+                                placeholder="Enter Password" 
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
                             />
 
-                            {error && <p style={{ color: 'red', fontSize: '14px', marginTop: '10px' }}>{error}</p>}
+                            {error && (<div className="validation-message" style={{marginBottom:"10px"}}> <span style={{ fontSize: "14px", lineHeight: "1" }}>⚠️</span> {error}</div>)}
                             <p className="forgot-password">
                             <span onClick={() => navigate("/forgotpass")} className="forgot-text">Forgot password?</span>
                             </p>

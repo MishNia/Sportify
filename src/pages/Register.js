@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { signupUser } from "../api"; // Import API function
 import { useAuth } from "../context/AuthContext";
 import {jwtDecode} from 'jwt-decode';
+import "./Register.css"; // Reuse the same styling as Login
 
 export default function Register() {
   const navigate = useNavigate();
@@ -14,9 +15,19 @@ export default function Register() {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [apiError, setApiError] = useState("");
 
-  const validateEmail = (email) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+  const validateEmail = (email) =>
+    /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email);
+
   const validatePassword = (password) =>
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(password);
+
+  const isDisabled =
+    !email ||
+    emailError ||
+    !password ||
+    passwordError ||
+    !confirmPassword ||
+    confirmPasswordError;
 
   const handleEmailChange = (e) => {
     const newEmail = e.target.value;
@@ -24,9 +35,6 @@ export default function Register() {
     setEmailError(validateEmail(newEmail) ? "" : "Please enter a valid email address.");
   };
 
-  const isDisabled = !email || emailError ||
-  !password || passwordError ||
-  !confirmPassword || confirmPasswordError;
 
   const handleGoogleSignIn = () => {
     window.location.href = 'http://localhost:8080/v1/auth/google';
@@ -36,26 +44,25 @@ export default function Register() {
     const newPassword = e.target.value;
     setPassword(newPassword);
     setPasswordError(
-        validatePassword(newPassword)
-            ? ""
-            : "Password must be at least 8 characters, include uppercase, lowercase, number, and special character."
+      validatePassword(newPassword)
+        ? ""
+        : "Password must be at least 8 characters, include uppercase, lowercase, number, and special character."
     );
   };
 
   const handleConfirmPasswordChange = (e) => {
     const newConfirmPassword = e.target.value;
     setConfirmPassword(newConfirmPassword);
-    setConfirmPasswordError(newConfirmPassword !== password ? "Passwords do not match." : "");
+    setConfirmPasswordError(
+      newConfirmPassword !== password ? "Passwords do not match." : ""
+    );
   };
 
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!email || emailError || !password || passwordError || !confirmPassword || confirmPasswordError) {
-      return;
-    }
+    if (isDisabled) return;
 
     const result = await signupUser(email, password);
     if (result.error) {
@@ -79,101 +86,87 @@ export default function Register() {
   };
 
   return (
-      <div
-          style={{
-            backgroundImage: "url('/sports.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            minHeight: "100vh",
-            display: "flex",
-            flexDirection: "row",
-          }}
-      >
-        {/* Left Branding Section */}
+    <div className="login-container">
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "row" }}>
+        {/* Branding Section */}
         <div
-            style={{
-              backgroundColor: "black",
-              width: "32%",
-              padding: "50px",
-              opacity: "80%",
-              color: "white",
-              textAlign: "center",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-            }}
+          style={{
+            backgroundColor: "black",
+            width: "32%",
+            padding: "50px",
+            opacity: "80%",
+            color: "white",
+            alignContent: "center",
+            textAlign: "center",
+            justifyContent: "center",
+          }}
+          className="relative w-1/2 flex flex-col justify-center items-center text-white p-10"
         >
-          <div>
+          <div className="relative z-10 text-center">
             <h1 style={{ fontSize: "80px", fontFamily: "sans-serif", marginBottom: "20px" }}>
               <i>SPORT!FY</i>
             </h1>
             <p style={{ fontSize: "20px" }}>
-              Connect with friends and the world around you through sports. Find people who share your love for sports, join local
-              events, and never miss a game again. Whether you're an athlete, a casual player, or just a fan, Sportify connects you
-              to the world of sports like never before!
+              Connect with friends and the world around you through sports. Find people who share your love for sports, join local events, and never miss a game again. Whether you're an athlete, a casual player, or just a fan, Sportify connects you to the world of sports like never before!
             </p>
           </div>
         </div>
 
-        {/* Right Signup Form Section */}
-        <div style={{ flex: 1, display: "flex", justifyContent: "center", alignItems: "center" }}>
-          <div style={{ backgroundColor: "white", borderRadius: "10px", padding: "50px", width: "400px" }}>
-            <h2 style={{ fontFamily: "sans-serif", fontSize: "30px", textAlign: "center" }}>Sign Up</h2>
-
+        {/* Register Form */}
+        <div style={{ flex: 1 }} className="login-right">
+          <div className="login-box">
+            <h2>Sign Up</h2>
             {apiError && <p style={{ color: "red", fontSize: "14px", textAlign: "center" }}>{apiError}</p>}
 
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
-              {/* Email Field */}
+            <form onSubmit={handleSubmit}>
               <label>Email</label>
               <input
-                  type="email"
-                  value={email}
-                  onChange={handleEmailChange}
-                  placeholder="Enter your email"
-                  style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={handleEmailChange}
+                required
               />
-              {emailError && <p style={{ color: "red", fontSize: "12px" }}>{emailError}</p>}
+              {emailError && (<div className="validation-message"> <span style={{ fontSize: "14px", lineHeight: "1" }}>⚠️</span> {emailError}</div>)}
 
-              {/* Password Field */}
               <label>Password</label>
               <input
-                  type="password"
-                  value={password}
-                  onChange={handlePasswordChange}
-                  placeholder="Enter your password"
-                  style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+                type="password"
+                placeholder="Enter your password"
+                value={password}
+                onChange={handlePasswordChange}
+                required
               />
-              {passwordError && <p style={{ color: "red", fontSize: "12px" }}>{passwordError}</p>}
+              {passwordError && (<div className="validation-message"> <span style={{ fontSize: "14px", lineHeight: "1" }}>⚠️</span> {passwordError}</div>)}
 
-              {/* Confirm Password Field */}
               <label>Confirm Password</label>
               <input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={handleConfirmPasswordChange}
-                  placeholder="Confirm your password"
-                  style={{ width: "100%", padding: "10px", borderRadius: "5px", border: "1px solid #ccc" }}
+                type="password"
+                placeholder="Confirm your password"
+                value={confirmPassword}
+                onChange={handleConfirmPasswordChange}
+                required
               />
-              {confirmPasswordError && <p style={{ color: "red", fontSize: "12px" }}>{confirmPasswordError}</p>}
+              {confirmPasswordError && (<div className="validation-message"> <span style={{ fontSize: "14px", lineHeight: "1" }}>⚠️</span> {confirmPasswordError}</div>)}
 
-              {/* Google Sign-In Button */}
-            <div style={{ marginTop: "20px", textAlign: "center" }}>
               <button
-                onClick={handleGoogleSignIn}
-                style={{
-                  padding: "10px",
-                  width: "300px",
-                  borderRadius: "5px",
-                  backgroundColor: "#4285f4",
-                  color: "white",
-                  border: "none",
-                  cursor: "pointer",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                }}
+                  type="submit"
+                  className="login-button"
+                  onClick={handleSubmit}
+                  style={{
+                    backgroundColor: isDisabled ? "gray" : "black",
+                    cursor: isDisabled ? "not-allowed" : "pointer",
+                  }}
+                disabled={isDisabled}
               >
+                Register
+              </button>
+            </form>
+
+            <p style={{ textAlign: "center", margin: "10px 0" }}>or</p>
+
+            <div style={{ textAlign: "center" }}>
+              <button className="SSOR-button" onClick={handleGoogleSignIn}>
                 <img
                   src="https://www.google.com/favicon.ico"
                   alt="Google"
@@ -181,38 +174,18 @@ export default function Register() {
                 />
                 Sign in with Google
               </button>
-            </div>
-
-
-              {/* Register Button */}
-              <div style={{ marginTop: "20px" }}>
-              <button
-                  type="submit"
-                  onClick={handleSubmit}
-                style={{
-                  padding: "12px",
-                  borderRadius: "5px",
-                  color: "white",
-                  border: "none",
-                  backgroundColor: emailError || passwordError || confirmPasswordError ? "gray" : "black",
-                  cursor: emailError || passwordError || confirmPasswordError ? "not-allowed" : "pointer",
-                }}
-                disabled={isDisabled}
-              >
-                Register
-              </button>
-            </div>
-            </form>
+            </div>              
 
             {/* Login Link */}
-            <p style={{ textAlign: "center", marginTop: "10px", fontSize: "14px" }}>
+            <p className="new-user">
               Already a user?{" "}
-              <a href="/Login" style={{ color: "black", fontWeight: "bold", textDecoration: "none" }}>
+              <span onClick={() => navigate("/login")} className="click-text">
                 Log in here
-              </a>
+              </span>
             </p>
           </div>
         </div>
       </div>
+    </div>
   );
 }
