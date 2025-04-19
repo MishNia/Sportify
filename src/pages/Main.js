@@ -47,7 +47,7 @@ export default function Main() {
           <p style={{ fontSize: "30px" }}> Find Your Team, Live Your Dream! on <i>Sportify</i>.</p>
           <p style={{ fontSize: "20px", padding: "20px 300px" }}>Find people who share your love for sports, join local events, and never miss a game again. Whether you're an athlete, a casual player, or just a fan, Sportify connects you to the world of sports like never before!</p>
           <p style={{ fontSize: "20px", paddingBottom: "20px" }}> Your Team is Waiting – Join Now!</p>
-          <button id="but5" style={{ padding: "20px 100px", fontSize: "20px" }} onClick={() => navigate("/Register")}> GET STARTED </button>
+          <button id="but5" style={{ padding: "20px 100px", fontSize: "20px", cursor: "pointer"}} onClick={() => navigate("/Register")}> GET STARTED </button>
 
 
         </div>
