@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-playground/validator/v10"
+	"github.com/golang-jwt/jwt/v5"
 	gorilla "github.com/gorilla/websocket"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
@@ -104,32 +106,77 @@ func (app *application) mount() http.Handler {
 		})
 
 		r.Route("/events", func(r chi.Router) {
-			r.Use(app.AuthTokenMiddleware)
-
 			// New endpoint for getting all events
-			r.Get("/all", app.getAllEventsSimpleHandler)
-			// Existing filtered endpoint
-			r.Get("/", app.getAllEventsHandler)
 
-			r.Post("/", app.createEventHandler)
-			r.Put("/{id}", app.updateEventHandler)
-			r.Get("/{id}", app.getEventHandler)
-			r.Delete("/{id}", app.deleteEventHandler)
-			r.Post("/{id}/join", app.joinEventHandler)
-			r.Delete("/{id}/leave", app.leaveEventHandler)
+			// Group protected endpoints
+			r.Group(func(r chi.Router) {
+				r.Use(app.AuthTokenMiddleware)
+				r.Post("/", app.createEventHandler)
+				r.Put("/{id}", app.updateEventHandler)
+				r.Get("/{id}", app.getEventHandler)
+				r.Delete("/{id}", app.deleteEventHandler)
+				r.Post("/{id}/join", app.joinEventHandler)
+				r.Delete("/{id}/leave", app.leaveEventHandler)
+				r.Get("/all", app.getAllEventsSimpleHandler)
+				// Existing filtered endpoint
+				r.Get("/", app.getAllEventsHandler)
+			})
 
-			// WebSocket endpoint for event chat
+			// WebSocket endpoint for event chat - no auth middleware
 			r.Get("/{id}/chat", func(w http.ResponseWriter, r *http.Request) {
+				// Get token from query parameter
+				token := r.URL.Query().Get("token")
+				if token == "" {
+					app.logger.Warnw("No token provided in websocket connection")
+					app.forbiddenResponse(w, r)
+					return
+				}
+
+				// Validate token
+				jwtToken, err := app.authenticator.ValidateToken(token)
+				if err != nil {
+					app.logger.Warnw("Invalid token in websocket connection", "error", err)
+					app.forbiddenResponse(w, r)
+					return
+				}
+
+				// Add claims to context
+				claims := jwtToken.Claims.(jwt.MapClaims)
+				userIDFloat := claims["sub"].(float64) // sub claim is a float64
+				userIDStr := strconv.FormatInt(int64(userIDFloat), 10)
+
+				// Convert userID to int64
+				userID := int64(userIDFloat)
+
+				// Get user's email from the Users store
+				user, err := app.store.Users.GetByID(r.Context(), userID)
+				if err != nil {
+					app.logger.Errorw("Failed to get user", "error", err)
+					app.internalServerError(w, r, err)
+					return
+				}
+
+				ctx := context.WithValue(r.Context(), "userID", userIDStr)
+				ctx = context.WithValue(ctx, "userEmail", user.Email)
+				r = r.WithContext(ctx)
+
+				app.logger.Infow("WebSocket connection attempt",
+					"eventID", chi.URLParam(r, "id"),
+					"userID", r.Context().Value("userID"),
+					"userEmail", r.Context().Value("userEmail"),
+				)
+
 				eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
 				if err != nil {
+					app.logger.Errorw("Failed to parse event ID", "error", err)
 					app.badRequestResponse(w, r, err)
 					return
 				}
 
 				// Verify user is a participant
-				userID, _ := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
 				event, err := app.store.Events.GetByID(r.Context(), eventID)
 				if err != nil {
+					app.logger.Errorw("Failed to get event", "error", err)
 					app.internalServerError(w, r, err)
 					return
 				}
@@ -141,13 +188,15 @@ func (app *application) mount() http.Handler {
 					}
 				}
 				if !isParticipant {
+					app.logger.Warnw("User is not a participant", "userID", userID, "eventID", eventID)
 					app.forbiddenResponse(w, r)
 					return
 				}
 
 				// Get username from profile
-				profile, err := app.store.Profile.GetByEmail(r.Context(), r.Context().Value("userEmail").(string))
+				profile, err := app.store.Profile.GetByEmail(r.Context(), user.Email)
 				if err != nil {
+					app.logger.Errorw("Failed to get profile", "error", err)
 					app.internalServerError(w, r, err)
 					return
 				}
@@ -155,12 +204,24 @@ func (app *application) mount() http.Handler {
 				upgrader := gorilla.Upgrader{
 					ReadBufferSize:  1024,
 					WriteBufferSize: 1024,
+					CheckOrigin: func(r *http.Request) bool {
+						origin := r.Header.Get("Origin")
+						app.logger.Infow("Checking origin", "origin", origin)
+						return true // Allow all origins for development
+					},
 				}
 				conn, err := upgrader.Upgrade(w, r, nil)
 				if err != nil {
+					app.logger.Errorw("Failed to upgrade connection", "error", err)
 					app.internalServerError(w, r, err)
 					return
 				}
+
+				app.logger.Infow("WebSocket connection established",
+					"eventID", eventID,
+					"userID", userID,
+					"username", profile.FirstName+" "+profile.LastName,
+				)
 
 				hub.HandleWebSocket(conn, eventID, userID, profile.FirstName+" "+profile.LastName)
 			})

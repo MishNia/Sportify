@@ -10,7 +10,8 @@ export default function ChatWindow({ eventId, isParticipant }) {
     useEffect(() => {
         if (!isParticipant) return;
 
-        const ws = new WebSocket(`ws://localhost:8080/v1/events/${eventId}/chat`);
+        const token = localStorage.getItem('token');
+        const ws = new WebSocket(`ws://localhost:8080/v1/events/${eventId}/chat?token=${token}`);
         
         ws.onopen = () => {
             console.log('WebSocket Connected');
@@ -92,4 +93,4 @@ export default function ChatWindow({ eventId, isParticipant }) {
             </form>
         </div>
     );
-} 
+}
