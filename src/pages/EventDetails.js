@@ -29,13 +29,20 @@ export default function EventDetails() {
 
 
                 setIsParticipant(false);
-                for (const participant of eventData.participants) {
-                    if (participant.id === localStorage.getItem("userId")) {
-                        setIsParticipant(true);
+                if (eventData.participants && Array.isArray(eventData.participants)) {
+                    console.log('inside if loop');
+                    for (const participant of eventData.participants) {
+                        console.log('participant:', participant.user_id);
+                        if (participant.user_id === parseInt(localStorage.getItem("userId"))) {
+                            setIsParticipant(true);
+                            console.log('setting isParticipant to true:', isParticipant);
+                            break; // Optional: Break the loop once a match is found to optimize performance
+                        }
                     }
                 }
                 setLoading(false);
             } catch (error) {
+                console.error('Error fetching event details:', error);
                 setError('Failed to load event details');
                 setLoading(false);
             }
