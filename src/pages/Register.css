@@ -41,7 +41,7 @@
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    max-width: 350px;
+    max-width: 800px;
     margin: auto;
 }
 
@@ -59,17 +59,19 @@
 
 .login-box input {
     width: 100%;
+    max-width: 500px;
     padding: 10px;
     margin: 8px 0 16px 0;
     border: 1px solid #ccc;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 10px;
     box-sizing: border-box;
 }
 
 .login-button {
     width: 100%;
     padding: 10px;
+    margin-top: 10px;
     background: black;
     color: white;
     border: none;
@@ -104,13 +106,14 @@
     text-align: right;
     margin-top: 0px;
 }
-.SSO-button:hover{
+.SSOR-button:hover{
     background-color: #3367d6;
 }
 
-.SSO-button {
+.SSOR-button {
     padding: 10px;
-    width: 300px;
+    width: 100%; /* Stretch to container width */
+    max-width: 500px; /* Maintain readable size */
     border-radius: 5px;
     background-color: #4285f4;
     color: white;
@@ -122,4 +125,24 @@
     font-size: 15px;
     gap: 10px;
     transition: background-color 0.3s ease;
+    margin: 0; /* This centers it inside the parent div */
+  }
+
+  .validation-message {
+    color: #d32f2f;
+    background-color: #fff0f0;
+    border: 1px solid #f5c2c2;
+    padding: 10px 14px;
+    font-size: 12px;
+    border-radius: 6px;
+    margin: 6px auto; /* Center horizontally */
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    max-width: 500px;
+    line-height: 1.4;
+    box-sizing: border-box;
+    word-break: break-word;
+    white-space: normal;
+    text-align: left;
   }
