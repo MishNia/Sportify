@@ -450,3 +450,48 @@ func (s *EventStore) GetAllWithFilter(ctx context.Context, filter *EventFilter) 
 
 	return events, nil
 }
+
+func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
+	query := `
+		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players, e.location_name, e.latitude, e.longitude, e.description, e.title, e.is_full, e.created_at, e.updated_at
+		FROM events e
+		LEFT JOIN event_participants ep ON e.id = ep.event_id
+		ORDER BY created_at DESC
+	`
+
+	rows, err := s.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []*Event
+	for rows.Next() {
+		var event Event
+		err := rows.Scan(
+			&event.ID,
+			&event.EventOwner,
+			&event.Sport,
+			&event.EventDateTime,
+			&event.MaxPlayers,
+			&event.LocationName,
+			&event.Latitude,
+			&event.Longitude,
+			&event.Description,
+			&event.Title,
+			&event.IsFull,
+			&event.CreatedAt,
+			&event.UpdatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, &event)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return events, nil
+}

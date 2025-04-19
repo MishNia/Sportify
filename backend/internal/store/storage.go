@@ -33,6 +33,7 @@ type Storage struct {
 		Join(context.Context, int64, int64) error
 		Leave(context.Context, int64, int64) error
 		GetAllWithFilter(context.Context, *EventFilter) ([]*Event, error)
+		GetAllSimple(ctx context.Context) ([]*Event, error)
 	}
 }
 

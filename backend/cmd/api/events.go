@@ -517,3 +517,15 @@ func (app *application) getAllEventsHandler(w http.ResponseWriter, r *http.Reque
 		app.internalServerError(w, r, err)
 	}
 }
+
+func (app *application) getAllEventsSimpleHandler(w http.ResponseWriter, r *http.Request) {
+	events, err := app.store.Events.GetAllSimple(r.Context())
+	if err != nil {
+		app.internalServerError(w, r, err)
+		return
+	}
+
+	if err := app.jsonResponse(w, http.StatusOK, events); err != nil {
+		app.internalServerError(w, r, err)
+	}
+}
