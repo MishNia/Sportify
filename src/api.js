@@ -2,14 +2,60 @@ import axios from "axios";
 
 const API_BASE_URL = "http://localhost:8080/v1"; // Change this if backend URL changes
 
+// Helper function to get auth headers
+const getAuthHeaders = () => {
+    const token = localStorage.getItem("token");
+    return {
+        Authorization: `Bearer ${token}`,
+    };
+};
+
+// Helper function for authenticated requests
+const authRequest = async (method, url, data = null) => {
+    try {
+        const headers = getAuthHeaders();
+        const config = { headers };
+
+        console.log(`Making ${method.toUpperCase()} request to: ${API_BASE_URL}${url}`);
+        if (data) {
+            console.log('Request data:', data);
+        }
+
+        let response;
+        if (method === 'get') {
+            response = await axios.get(`${API_BASE_URL}${url}`, config);
+        } else if (method === 'post') {
+            response = await axios.post(`${API_BASE_URL}${url}`, data, config);
+        } else if (method === 'put') {
+            response = await axios.put(`${API_BASE_URL}${url}`, data, config);
+        } else if (method === 'delete') {
+            response = await axios.delete(`${API_BASE_URL}${url}`, config);
+        }
+
+        console.log(`Response from ${method.toUpperCase()} ${url}:`, response.data);
+        return response.data;
+    } catch (error) {
+        console.error(`Error in ${method.toUpperCase()} request to ${url}:`, error);
+
+        // If token is invalid/expired, redirect to login
+        if (error.response && error.response.status === 401) {
+            console.log('Authentication error, redirecting to login');
+            localStorage.removeItem("token");
+            window.location.href = "/login";
+        }
+
+        return {
+            error: error.response?.data?.error || error.message || "Request failed",
+            status: error.response?.status
+        };
+    }
+};
+
 // Signup API Call
 export const signupUser = async (email, password) => {
     try {
-        const response = await axios.post(`${API_BASE_URL}/auth/signup`, 
+        const response = await axios.post(`${API_BASE_URL}/auth/signup`,
             { email, password });
-
-
-
         return response.data;
     } catch (error) {
         return { error: error.response?.data?.error || "Something went wrong" };
@@ -20,9 +66,6 @@ export const signupUser = async (email, password) => {
 export const loginUser = async (email, password) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
-
-
-
         return response.data;
     } catch (error) {
         return { error: error.response?.data?.error || "Invalid credentials" };
@@ -31,17 +74,90 @@ export const loginUser = async (email, password) => {
 
 // Create Profile API Call
 export const createProfile = async (profileData) => {
+    return authRequest('post', '/profile', profileData);
+};
+
+// Get User Profile
+export const getUserProfile = async () => {
+    return authRequest('get', '/profile/0');
+};
+
+// Update User Profile
+export const updateProfile = async (profileData) => {
+    return authRequest('put', '/profile', profileData);
+};
+
+// Create Event API Call
+export const createEvent = async (eventData) => {
+    console.log('createEvent called with data:', eventData);
     try {
-        const token = localStorage.getItem("token");
+        const result = await authRequest('post', '/events', eventData);
+        console.log('createEvent response:', result);
+        return result;
+    } catch (error) {
+        console.error('Error in createEvent:', error);
+        return { error: error.message || 'Failed to create event' };
+    }
+};
 
-        const headers = {
-            Authorization: `Bearer ${token}`,
-        };
+// Get All Events
+export const getAllEvents = async (filters = {}) => {
+    try {
+        console.log('Calling getAllEvents with filters:', filters);
+        console.log('API_BASE_URL:', API_BASE_URL);
 
-        const response = await axios.post(`${API_BASE_URL}/profile`,
-            profileData, { headers });
+        // The backend expects a JSON body in the GET request
+        const headers = getAuthHeaders();
+        console.log('Auth headers:', headers);
+
+        // The backend expects snake_case field names
+        console.log('Making API request to:', `${API_BASE_URL}/events`);
+        console.log('With filters:', filters);
+
+        // Try using POST method which is more standard for sending a body
+        const response = await axios.post(`${API_BASE_URL}/events`, filters, { headers });
+
+        console.log('API response status:', response.status);
+        console.log('API response headers:', response.headers);
+        console.log('getAllEvents raw result:', response.data);
+
         return response.data;
     } catch (error) {
-        return { error: error.response?.data?.error || "Profile creation failed" };
+        console.error('Error in getAllEvents:', error);
+        console.error('Error response:', error.response);
+        console.error('Error message:', error.message);
+
+        if (error.response) {
+            console.error('Status:', error.response.status);
+            console.error('Data:', error.response.data);
+            console.error('Headers:', error.response.headers);
+        }
+
+        return { error: error.response?.data?.error || error.message || 'Failed to fetch events' };
     }
+};
+
+// Get Event by ID
+export const getEventById = async (eventId) => {
+    return authRequest('get', `/events/${eventId}`);
+};
+
+// Update Event
+export const updateEvent = async (eventId, eventData) => {
+    return authRequest('put', `/events/${eventId}`, eventData);
+};
+
+// Delete Event
+export const deleteEvent = async (eventId) => {
+    return authRequest('delete', `/events/${eventId}`);
+};
+
+// Join Event
+export const joinEvent = async (eventId) => {
+    return authRequest('post', `/events/${eventId}/join`);
+};
+
+// Leave Event
+export const leaveEvent = async (eventId) => {
+    return authRequest('post', `/events/${eventId}/leave`);
 };

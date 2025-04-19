@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Login.css"; // Make sure to create this CSS file for styling
-import { loginUser } from "../api"; // Import API function
+import { loginUser, getUserProfile } from "../api"; // Import API functions
+import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
     const navigate = useNavigate();
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
+
+    const { login, checkUserProfile } = useAuth();
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -18,7 +21,19 @@ export default function Login() {
         } else {
             localStorage.setItem("token", result.data); // Save token in localStorage
             alert("Login successful!");
-            navigate("/profile");
+
+            // Check if user has a profile using the context function
+            const hasProfile = await checkUserProfile();
+
+            if (hasProfile) {
+                // User has a profile, go to home page
+                console.log('User has a profile, redirecting to home');
+                navigate("/home");
+            } else {
+                // User doesn't have a profile, go to profile creation page
+                console.log('User needs to create a profile');
+                navigate("/profile");
+            }
         }
     };
 
@@ -45,18 +60,18 @@ export default function Login() {
 
                         <form onSubmit={handleLogin}>
                             <label>Email</label>
-                            <input 
-                                type="email" 
-                                placeholder="enter email" 
+                            <input
+                                type="email"
+                                placeholder="enter email"
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
                                 required
                             />
 
                             <label>Password</label>
-                            <input 
-                                type="password" 
-                                placeholder="Password" 
+                            <input
+                                type="password"
+                                placeholder="Password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
@@ -87,9 +102,9 @@ export default function Login() {
                                     gap: "10px",
                                 }}
                             >
-                                <img 
-                                    src="https://www.google.com/favicon.ico" 
-                                    alt="Google" 
+                                <img
+                                    src="https://www.google.com/favicon.ico"
+                                    alt="Google"
                                     style={{ width: "20px", height: "20px" }}
                                 />
                                 Sign in with Google

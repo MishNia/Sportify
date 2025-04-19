@@ -24,7 +24,6 @@ describe("Profile Component Unit Tests", () => {
     cy.contains("Profile").should("exist");
     cy.get("input[name='first_name']").should("exist");
     cy.get("input[name='last_name']").should("exist");
-    cy.get("input[name='email']").should("exist");
     cy.get("input[name='age']").should("exist");
     cy.get("select[name='gender']").should("exist");
     cy.contains("Select Sports").should("exist");
@@ -33,7 +32,6 @@ describe("Profile Component Unit Tests", () => {
   it("should allow user to enter text inputs", () => {
     cy.get("input[name='first_name']").type("John").should("have.value", "John");
     cy.get("input[name='last_name']").type("Doe").should("have.value", "Doe");
-    cy.get("input[name='email']").type("JohnDoe@gmail.com").should("have.value", "JohnDoe@gmail.com");
     cy.get("input[name='age']").type("25").should("have.value", "25");
   });
 

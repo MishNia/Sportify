@@ -2,9 +2,11 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createProfile } from "../api"; // Import API function
 import "./Profile.css"; // Ensure this CSS file exists
+import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [formData, setFormData] = useState({
         first_name: "",
         last_name: "",
@@ -47,6 +49,8 @@ export default function Profile() {
         if (result.error) {
             setError(result.error);
         } else {
+            // Update auth context with the new profile
+            login(localStorage.getItem("token"), { profile: result });
             alert("Profile created successfully!");
             navigate("/Home");
         }
@@ -71,7 +75,6 @@ export default function Profile() {
                         <h2>Profile</h2>
 
                         {error && <p style={{ color: "red", fontSize: "14px", textAlign: "center" }}>{error}</p>}
-
 
                         <label>First Name</label>
                         <input

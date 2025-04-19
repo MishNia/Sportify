@@ -12,24 +12,56 @@ import CreateEvent from './pages/CreateEvent'
 import MyProfile from "./pages/MyProfile";
 import './App.css';
 
+// Auth Context
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import ProfileRequiredRoute from './components/ProfileRequiredRoute';
+
 function App() {
   return (
     <div className="App">
-      <BrowserRouter>
-        <Routes>
-          <Route index element={<Main />}/>
-          <Route path="/Main" element={<Main />}/>
-          <Route path="/Home" element={<Home />}/>
-          <Route path="/find" element={<FindTeams />} />
-          <Route path="/Profile" element={<Profile />}/>
-          <Route path="/auth/google/callback" element={<GoogleCallback />}/>
-          <Route path="/Login" element={<Login />}/>
-          <Route path="/Forgotpass" element={<Forgotpass />}/>
-          <Route path="/Register" element={<Register />}/>
-          <Route path="/create-event" element={<CreateEvent />}/>
-          <Route path="/MyProfile" element={<MyProfile />}/>
-        </Routes>
-      </BrowserRouter>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route index element={<Main />}/>
+            <Route path="/Main" element={<Main />}/>
+            <Route path="/Login" element={<Login />}/>
+            <Route path="/Forgotpass" element={<Forgotpass />}/>
+            <Route path="/Register" element={<Register />}/>
+            <Route path="/auth/google/callback" element={<GoogleCallback />}/>
+
+            {/* Routes that only require authentication */}
+            <Route path="/Profile" element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }/>
+
+            {/* Routes that require both authentication and a profile */}
+            <Route path="/Home" element={
+              <ProfileRequiredRoute>
+                <Home />
+              </ProfileRequiredRoute>
+            }/>
+            <Route path="/find" element={
+              <ProfileRequiredRoute>
+                <FindTeams />
+              </ProfileRequiredRoute>
+            } />
+            <Route path="/create-event" element={
+              <ProfileRequiredRoute>
+                <CreateEvent />
+              </ProfileRequiredRoute>
+            }/>
+            <Route path="/MyProfile" element={
+              <ProfileRequiredRoute>
+                <MyProfile />
+              </ProfileRequiredRoute>
+            }/>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
     </div>
   );
 }

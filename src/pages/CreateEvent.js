@@ -1,6 +1,8 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useState, useEffect, useRef } from 'react';
+import { createEvent } from '../api';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * CreateEvent Component
@@ -10,11 +12,12 @@ import { useState, useEffect, useRef } from 'react';
 const CreateEvent = () => {
     const navigate = useNavigate();
     const autoCompleteRef = useRef(null);
-    
+    const { userProfile } = useAuth();
+
     // Initialize form data state with empty values
     const [formData, setFormData] = useState({
         sport: "",
-        event_date: "",
+        event_date: "", // This will be converted to event_datetime for the API
         max_players: "",
         location_name: "",
         latitude: "",
@@ -30,9 +33,9 @@ const CreateEvent = () => {
     useEffect(() => {
         // Load Google Maps JavaScript API
         const googleMapScript = document.createElement('script');
-        googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=KEY&libraries=places`;
+        googleMapScript.src = `https://maps.googleapis.com/maps/api/js?key=AIzaSyDmyMg9zTEshR4IYiUCBN9_OeazNbfvtf8&libraries=places`;
         googleMapScript.async = true;
-        
+
         // Initialize Autocomplete after script loads
         googleMapScript.addEventListener('load', () => {
             // Check if the input element exists
@@ -104,27 +107,37 @@ const CreateEvent = () => {
         setLoading(true);
 
         try {
-            const existingEvents = JSON.parse(localStorage.getItem('events') || '[]');
-            const newEvent = {
-                ...formData,
-                id: Date.now(),
-                creator: "Current User",
-                created_at: new Date().toISOString()
+            // Prepare event data for API according to the backend's expected field names
+            const eventData = {
+                sport: formData.sport,
+                // Format the date as ISO string with timezone
+                event_date: formData.event_date ? new Date(formData.event_date + ':00Z').toISOString() : null,
+                max_players: parseInt(formData.max_players, 10),
+                location_name: formData.location_name,
+                latitude: parseFloat(formData.latitude),
+                longitude: parseFloat(formData.longitude),
+                description: formData.description,
+                title: formData.title
             };
 
-            // Log the complete event data
-            console.log('New Event Data:', {
-                ...newEvent,
-                location: {
-                    name: newEvent.location_name,
-                    latitude: newEvent.latitude,
-                    longitude: newEvent.longitude
-                }
-            });
+            // Log the event data being sent to API
+            console.log('Sending event data to API:', eventData);
 
-            localStorage.setItem('events', JSON.stringify([...existingEvents, newEvent]));
-            alert("Event created successfully!");
-            navigate("/home");
+            // Call the API to create the event
+            console.log('Calling createEvent API with data:', eventData);
+            const result = await createEvent(eventData);
+            console.log('Create event API response:', result);
+
+            if (result.error) {
+                setError(result.error);
+                console.error('API error creating event:', result.error);
+            } else {
+                alert("Event created successfully!");
+                // Add a small delay to allow the backend to process the event
+                setTimeout(() => {
+                    navigate("/home");
+                }, 1000);
+            }
         } catch (err) {
             setError("Failed to create event");
             console.error('Error creating event:', err);
@@ -136,34 +149,34 @@ const CreateEvent = () => {
     // Component UI rendering
     return (
         // Main container with full viewport height and background
-        <div style={{ 
-            minHeight: "100vh", 
-            display: "flex", 
-            justifyContent: "center", 
+        <div style={{
+            minHeight: "100vh",
+            display: "flex",
+            justifyContent: "center",
             alignItems: "center",
             backgroundImage: "url('/sports.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center"
         }}>
             {/* Form container box */}
-            <div style={{ 
-                backgroundColor: "white", 
-                borderRadius: "10px", 
+            <div style={{
+                backgroundColor: "white",
+                borderRadius: "10px",
                 padding: "50px",
                 width: "500px",
                 boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.1)"
             }}>
                 {/* Form title */}
-                <h2 style={{ 
-                    textAlign: "center", 
+                <h2 style={{
+                    textAlign: "center",
                     marginBottom: "30px",
                     fontSize: "24px",
                     color: "#333"
                 }}>Create Event</h2>
-                
+
                 {/* Error message display */}
                 {error && <p style={{ color: "red", fontSize: "14px", textAlign: "center", marginBottom: "20px" }}>{error}</p>}
-                
+
                 {/* Event creation form */}
                 <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
                     {/* Form fields - each wrapped in a div for proper spacing */}
@@ -306,8 +319,8 @@ const CreateEvent = () => {
                     </div>
 
                     {/* Submit button */}
-                    <button 
-                        type="submit" 
+                    <button
+                        type="submit"
                         style={{
                             backgroundColor: loading ? "#ccc" : "black",
                             color: "white",

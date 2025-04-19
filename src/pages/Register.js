@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { signupUser } from "../api"; // Import API function
+import { signupUser, getUserProfile } from "../api"; // Import API functions
+import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ export default function Register() {
   const isDisabled = !email || emailError ||
   !password || passwordError ||
   !confirmPassword || confirmPasswordError;
-  
+
   const handleGoogleSignIn = () => {
     window.location.href = 'http://localhost:8080/v1/auth/google';
   };
@@ -46,6 +47,8 @@ export default function Register() {
     setConfirmPasswordError(newConfirmPassword !== password ? "Passwords do not match." : "");
   };
 
+  const { login } = useAuth();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -57,8 +60,12 @@ export default function Register() {
     if (result.error) {
       setApiError(result.error);
     } else {
-        localStorage.setItem("token", result.data);
-      alert("Signup successful! Redirecting to login.");
+      // Use the login function from auth context
+      login(result.data);
+      alert("Signup successful!");
+
+      // After signup, users always need to create a profile
+      // No need to check if profile exists since this is a new user
       navigate("/Profile");
     }
   };
@@ -159,9 +166,9 @@ export default function Register() {
                   gap: "10px",
                 }}
               >
-                <img 
-                  src="https://www.google.com/favicon.ico" 
-                  alt="Google" 
+                <img
+                  src="https://www.google.com/favicon.ico"
+                  alt="Google"
                   style={{ width: "20px", height: "20px" }}
                 />
                 Sign in with Google
@@ -171,7 +178,7 @@ export default function Register() {
 
               {/* Register Button */}
               <div style={{ marginTop: "20px" }}>
-              <button 
+              <button
                   type="submit"
                   onClick={handleSubmit}
                 style={{
@@ -182,8 +189,8 @@ export default function Register() {
                   backgroundColor: emailError || passwordError || confirmPasswordError ? "gray" : "black",
                   color: "white",
                   cursor: emailError || passwordError || confirmPasswordError ? "not-allowed" : "pointer",
-                }} 
-                disabled={isDisabled} 
+                }}
+                disabled={isDisabled}
               >
                 Register
               </button>

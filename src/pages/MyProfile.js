@@ -1,19 +1,49 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, } from "react-router-dom"
-import { createProfile } from "../api";
+import { createProfile, getUserProfile, updateProfile } from "../api";
 import "./Main.css";
 import "./MyProfile.css";
+import { useAuth } from "../context/AuthContext";
 
 export default function MyProfile() {
     const navigate = useNavigate();
+    const { userProfile, logout, updateUserProfile } = useAuth();
     const [formData, setFormData] = useState({
-        email: "",  // Include email for API call
         first_name: "",
         last_name: "",
         age: 0,
         gender: "",
         sport_preference: [],
     });
+
+    // Load user profile data when component mounts
+    useEffect(() => {
+        const fetchProfile = async () => {
+            if (!userProfile) {
+                const result = await getUserProfile();
+                if (!result.error) {
+                    updateUserProfile(result);
+                    setFormData({
+                        first_name: result.first_name || "",
+                        last_name: result.last_name || "",
+                        age: result.age || 0,
+                        gender: result.gender || "",
+                        sport_preference: result.sport_preference || [],
+                    });
+                }
+            } else {
+                setFormData({
+                    first_name: userProfile.first_name || "",
+                    last_name: userProfile.last_name || "",
+                    age: userProfile.age || 0,
+                    gender: userProfile.gender || "",
+                    sport_preference: userProfile.sport_preference || [],
+                });
+            }
+        };
+
+        fetchProfile();
+    }, [userProfile, updateUserProfile]);
 
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [error, setError] = useState("");
@@ -42,15 +72,28 @@ export default function MyProfile() {
         setError("");  // Reset previous error messages
         setLoading(true);
 
-        const result = await createProfile(formData);
+        let result;
+        if (userProfile) {
+            // Update existing profile
+            result = await updateProfile(formData);
+            if (!result.error) {
+                updateUserProfile(result);
+            }
+        } else {
+            // Create new profile
+            result = await createProfile(formData);
+            if (!result.error) {
+                updateUserProfile(result);
+            }
+        }
 
         setLoading(false);
 
         if (result.error) {
             setError(result.error);
         } else {
-            alert("Profile created successfully!");
-            navigate("/Home"); 
+            alert(userProfile ? "Profile updated successfully!" : "Profile created successfully!");
+            navigate("/Home");
         }
     };
     return (
@@ -92,7 +135,10 @@ export default function MyProfile() {
                             +
                         </button>
                     </div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => navigate("/login")}>Sign Out</button></div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => {
+                        logout();
+                        navigate("/login");
+                    }}>Sign Out</button></div>
                 </div>
             </nav>
             <div style={{
@@ -119,17 +165,6 @@ export default function MyProfile() {
                         <h2 style={{ flex: "100%" }}>Profile</h2>
 
                         {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
-
-                        <label style={{ paddingLeft: "50px", textAlign: "initial", flex: "15%", marginTop: "20px" }}>Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            style={{ width: "200px", flex: "20%", marginTop: "20px" }}
-                            placeholder="sonikagoud20@gmail.com"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
 
                         <label style={{ paddingLeft: "100px", textAlign: "initial", flex: "15%", marginTop: "20px", }}>First Name</label>
                         <input
