@@ -455,10 +455,11 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 	query := `
 		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players, e.location_name, e.latitude, e.longitude, e.description, e.title, e.is_full, e.created_at, e.updated_at,
 		ep.id, ep.user_id, ep.joined_at,
-		u.first_name, u.last_name
+		p.first_name, p.last_name
 		FROM events e
 		LEFT JOIN event_participants ep ON e.id = ep.event_id
 		LEFT JOIN users u ON ep.user_id = u.id
+		LEFT JOIN profile p ON u.email = p.email
 		ORDER BY created_at DESC, e.id, ep.joined_at
 	`
 
@@ -495,7 +496,7 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 		if err != nil {
 			return nil, err
 		}
-		
+
 		ev, exists := eventMap[event.ID]
 		if !exists {
 			event.Participants = []EventParticipant{}
