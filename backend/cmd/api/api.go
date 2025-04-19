@@ -78,7 +78,7 @@ func (app *application) mount() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	// Create WebSocket hub
+	// Initialize websocket hub
 	hub := websocket.NewHub()
 	go hub.Run()
 

@@ -3,6 +3,7 @@ package websocket
 import (
 	"log"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 )
@@ -28,6 +29,7 @@ type Hub struct {
 	register   chan *Client
 	unregister chan *Client
 	mu         sync.Mutex
+	messages   map[int64][]Message
 }
 
 func NewHub() *Hub {
@@ -36,6 +38,7 @@ func NewHub() *Hub {
 		broadcast:  make(chan Message),
 		register:   make(chan *Client),
 		unregister: make(chan *Client),
+		messages:   make(map[int64][]Message),
 	}
 }
 
@@ -45,6 +48,14 @@ func (h *Hub) Run() {
 		case client := <-h.register:
 			h.mu.Lock()
 			h.clients[client] = true
+			h.mu.Unlock()
+
+			h.mu.Lock()
+			if messages, ok := h.messages[client.eventID]; ok {
+				for _, msg := range messages {
+					client.conn.WriteJSON(msg)
+				}
+			}
 			h.mu.Unlock()
 
 		case client := <-h.unregister:
@@ -57,6 +68,8 @@ func (h *Hub) Run() {
 
 		case message := <-h.broadcast:
 			h.mu.Lock()
+			h.messages[message.EventID] = append(h.messages[message.EventID], message)
+
 			for client := range h.clients {
 				if client.eventID == message.EventID {
 					err := client.conn.WriteJSON(message)
@@ -102,6 +115,7 @@ func (h *Hub) HandleWebSocket(conn *websocket.Conn, eventID int64, userID int64,
 		msg.EventID = eventID
 		msg.UserID = userID
 		msg.Username = username
+		msg.Timestamp = time.Now().Format(time.RFC3339)
 
 		h.broadcast <- msg
 	}
