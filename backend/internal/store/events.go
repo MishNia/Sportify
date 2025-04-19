@@ -453,10 +453,13 @@ func (s *EventStore) GetAllWithFilter(ctx context.Context, filter *EventFilter) 
 
 func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 	query := `
-		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players, e.location_name, e.latitude, e.longitude, e.description, e.title, e.is_full, e.created_at, e.updated_at
+		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players, e.location_name, e.latitude, e.longitude, e.description, e.title, e.is_full, e.created_at, e.updated_at,
+		ep.id, ep.user_id, ep.joined_at,
+		u.first_name, u.last_name
 		FROM events e
 		LEFT JOIN event_participants ep ON e.id = ep.event_id
-		ORDER BY created_at DESC
+		LEFT JOIN users u ON ep.user_id = u.id
+		ORDER BY created_at DESC, e.id, ep.joined_at
 	`
 
 	rows, err := s.db.QueryContext(ctx, query)
@@ -465,9 +468,10 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 	}
 	defer rows.Close()
 
-	var events []*Event
+	eventMap := make(map[int64]*Event)
 	for rows.Next() {
 		var event Event
+		var participant EventParticipant
 		err := rows.Scan(
 			&event.ID,
 			&event.EventOwner,
@@ -482,11 +486,31 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 			&event.IsFull,
 			&event.CreatedAt,
 			&event.UpdatedAt,
+			&participant.ID,
+			&participant.UserID,
+			&participant.JoinedAt,
+			&participant.FirstName,
+			&participant.LastName,
 		)
 		if err != nil {
 			return nil, err
 		}
-		events = append(events, &event)
+		
+		ev, exists := eventMap[event.ID]
+		if !exists {
+			event.Participants = []EventParticipant{}
+			eventMap[event.ID] = &event
+			ev = &event
+		}
+
+		participant.EventID = event.ID
+		ev.Participants = append(ev.Participants, participant)
+	}
+
+	var events []*Event
+	for _, evt := range eventMap {
+		evt.RegisteredCount = len(evt.Participants)
+		events = append(events, evt)
 	}
 
 	if err = rows.Err(); err != nil {
