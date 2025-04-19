@@ -12,7 +12,8 @@
     "react-dom": "^18.2.0",
     "react-native": "^0.77.0",
     "react-router-dom": "^7.1.5",
-    "react-scripts": "^5.0.1"
+    "react-scripts": "^5.0.1",
+    "jwt-decode": "^4.0.0"
   },
   "scripts": {
     "start": "react-scripts start",

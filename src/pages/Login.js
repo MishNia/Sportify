@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Login.css"; // Make sure to create this CSS file for styling
 import { loginUser } from "../api"; // Import API function
 import { useAuth } from "../context/AuthContext";
+import{jwtDecode} from 'jwt-decode';
 
 export default function Login() {
     const navigate = useNavigate();
@@ -19,20 +20,25 @@ export default function Login() {
         if (result.error) {
             setError(result.error);
         } else {
-            localStorage.setItem("token", result.data); // Save token in localStorage
-            alert("Login successful!");
+            localStorage.setItem("token", result.data);
 
+            const decoded=jwtDecode(localStorage.getItem("token"));
+            const userId=decoded.sub;
+            console.log("User ID:",userId);
+            localStorage.setItem("userId", userId);
+
+            alert("Login successful!");
             // Check if user has a profile using the context function
             const hasProfile = await checkUserProfile();
 
             if (hasProfile) {
                 // User has a profile, go to home page
                 console.log('User has a profile, redirecting to home');
-                navigate("/home");
+                navigate("/Home");
             } else {
                 // User doesn't have a profile, go to profile creation page
                 console.log('User needs to create a profile');
-                navigate("/profile");
+                navigate("/Profile");
             }
         }
     };

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { signupUser } from "../api"; // Import API function
 import { useAuth } from "../context/AuthContext";
+import {jwtDecode} from 'jwt-decode';
 
 export default function Register() {
   const navigate = useNavigate();
@@ -60,6 +61,13 @@ export default function Register() {
     if (result.error) {
       setApiError(result.error);
     } else {
+        localStorage.setItem("token", result.data);
+
+        const decoded=jwtDecode(localStorage.getItem("token"));
+        const userId=decoded.sub;
+        console.log("User ID:",userId);
+        localStorage.setItem("userId", userId);
+
       // Use the login function from auth context
       login(result.data);
       alert("Signup successful!");

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import "./Main.css"
-import { getEvents } from '../api'
+import { getEvents, joinEvent } from '../api'
 
 export default function Home() {
     const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [error, setError] = useState(null);
+    const [loading, setLoading] = useState(false);
+    const [joinedEvents, setJoinedEvents] = useState([]);
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -24,15 +26,37 @@ export default function Home() {
         fetchEvents();
     }, []);
 
-    const handleJoinTeam = (eventId) => {
-        // TODO: Implement join team functionality
-        console.log('Joining team for event:', eventId);
+    const handleJoinTeam = async (eventId) => {
+        try {
+            setLoading(true);
+            const response = await joinEvent(eventId);
+
+            if (response.error) {
+                setError(response.error);
+                alert(response.error);
+            } else {
+                // Add the event ID to the joined events list
+                setJoinedEvents([...joinedEvents, eventId]);
+                alert('Successfully joined the event!');
+
+                // Refresh events to get updated data
+                const eventsResponse = await getEvents();
+                const updatedEvents = eventsResponse.data;
+                setEvents(updatedEvents);
+            }
+        } catch (error) {
+            console.error('Error joining event:', error);
+            setError('Failed to join event. ' + (error.message || ''));
+            alert('Failed to join event: ' + (error.message || 'Unknown error'));
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const handleViewEvent = (eventId) => {
+    const handleViewDetails = (eventId) => {
         // TODO: Implement view event functionality
         console.log('Viewing event:', eventId);
-        // navigate(`/event/${eventId}`); // Future implementation
+        navigate(`/events/${eventId}`);
     };
 
     return (
@@ -72,8 +96,6 @@ export default function Home() {
                 </div>
                 <div style={{ flex: 2, display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }} className="flex">
                     <div style={{ flex: 3, height: '100%', width: '100%' }}><button className="button" onClick={() => navigate("/Home")}>Home</button></div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => navigate("/Find")}>Find</button></div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button">Friends</button></div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => navigate("/MyProfile")}>Profile</button></div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}>
                         <button
@@ -88,7 +110,10 @@ export default function Home() {
                             +
                         </button>
                     </div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => navigate("/login")}>Sign Out</button></div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => {
+                            localStorage.removeItem("token");
+                            navigate("/login");
+                        }}>Sign Out</button></div>
                 </div>
             </nav>
             <div style={{
@@ -132,21 +157,30 @@ export default function Home() {
                         }}>
                             <button
                                 onClick={() => handleJoinTeam(event.id)}
+                                disabled={loading || event.is_full || joinedEvents.includes(event.id) ||
+                                         (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))}
                                 style={{
                                     padding: "6px 12px",
-                                    backgroundColor: "#4CAF50",
+                                    backgroundColor: event.is_full || joinedEvents.includes(event.id) ||
+                                                   (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))
+                                                   ? "#cccccc" : "#4CAF50",
                                     color: "white",
                                     border: "none",
                                     borderRadius: "4px",
-                                    cursor: "pointer",
+                                    cursor: event.is_full || joinedEvents.includes(event.id) ||
+                                           (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))
+                                           ? "not-allowed" : "pointer",
                                     flex: 1,
                                     fontSize: "13px"
                                 }}
                             >
-                                Join Team
+                                {event.is_full ? "Event Full" :
+                                 joinedEvents.includes(event.id) ||
+                                 (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))
+                                 ? "Already Joined" : "Join Team"}
                             </button>
                             <button
-                                onClick={() => handleViewEvent(event.id)}
+                                onClick={() => handleViewDetails(event.id)}
                                 style={{
                                     padding: "6px 12px",
                                     backgroundColor: "#2196F3",

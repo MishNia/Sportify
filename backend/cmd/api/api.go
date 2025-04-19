@@ -54,7 +54,7 @@ func (app *application) mount() http.Handler {
 
 	// CORS middleware
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001","http://localhost:3005","http://localhost:3006"},
+		AllowedOrigins:   []string{"http://localhost:3000", "http://localhost:3001","http://localhost:3005","http://localhost:3006","http://localhost:3003",,"http://localhost:3004"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},

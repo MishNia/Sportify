@@ -17,7 +17,7 @@ export default function MyProfile() {
             try {
                 const result = await getUserProfile();
                 console.log('Profile data from API:', result);
-                
+
                 if (!result.error) {
                     // Check if the result has a data property (from API response)
                     const profile = result.data || result;
@@ -32,7 +32,7 @@ export default function MyProfile() {
                 setLoading(false);
             }
         };
-        
+
         fetchProfile();
     }, []);
 
@@ -42,9 +42,23 @@ export default function MyProfile() {
     };
 
     return (
-        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <div style={{
+            minHeight: "100vh",
+            display: "flex",
+            flexDirection: "column",
+            backgroundImage: "url('/sports.jpg')",
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+            backgroundAttachment: "fixed" // This ensures the background stays fixed while scrolling
+        }}>
             {/* Navigation Bar */}
-            <nav style={{ background: 'black', height: '60px', display: 'flex', padding: '0px', flexDirection: 'row' }}>
+            <nav style={{
+                background: 'black',
+                height: '60px',
+                display: 'flex',
+                padding: '0px',
+                flexDirection: 'row'
+            }} className="navbar">
                 <div style={{
                     display: 'flex',
                     justifyContent: 'center',
@@ -63,10 +77,8 @@ export default function MyProfile() {
                         SPORT!FY
                     </p>
                 </div>
-                <div style={{ flex: 2, display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }}>
+                <div style={{ flex: 2, display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }} className="flex">
                     <div style={{ flex: 3, height: '100%', width: '100%' }}><button className="button" onClick={() => handleNavigate("/Home")}>Home</button></div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => handleNavigate("/find")}>Find</button></div>
-                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button">Friends</button></div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => handleNavigate("/MyProfile")}>Profile</button></div>
                     <div style={{ height: '100%', width: '100%', flex: 3 }}>
                         <button
@@ -95,9 +107,6 @@ export default function MyProfile() {
                 flex: 1,
                 display: "flex",
                 flexDirection: "column",
-                backgroundImage: "url('/sports.jpg')",
-                backgroundSize: "cover",
-                backgroundPosition: "center",
                 alignItems: "center",
                 justifyContent: "center"
             }}>
@@ -113,7 +122,7 @@ export default function MyProfile() {
                     boxShadow: "0 4px 8px rgba(0,0,0,0.1)"
                 }}>
                     <h2 style={{ textAlign: "center", marginBottom: "30px" }}>My Profile</h2>
-                    
+
                     {loading ? (
                         <div style={{ textAlign: "center", padding: "20px" }}>
                             <p>Loading profile data...</p>
@@ -121,7 +130,7 @@ export default function MyProfile() {
                     ) : error ? (
                         <div style={{ textAlign: "center", padding: "20px", color: "red" }}>
                             <p>{error}</p>
-                            <button 
+                            <button
                                 onClick={() => handleNavigate("/Profile")}
                                 style={{
                                     padding: "10px 20px",
@@ -158,12 +167,12 @@ export default function MyProfile() {
                                         <p>{profileData.gender}</p>
                                     </div>
                                 </div>
-                                
+
                                 <div style={{ flex: "1", minWidth: "300px" }}>
                                     <h3>Sports Preferences</h3>
                                     <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
                                         {profileData.sport_preference && profileData.sport_preference.map((sport, index) => (
-                                            <span 
+                                            <span
                                                 key={index}
                                                 style={{
                                                     backgroundColor: "#f0f0f0",
@@ -178,9 +187,9 @@ export default function MyProfile() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div style={{ marginTop: "30px", textAlign: "center" }}>
-                                <button 
+                                <button
                                     onClick={() => handleNavigate("/Profile")}
                                     style={{
                                         padding: "10px 20px",
@@ -198,7 +207,7 @@ export default function MyProfile() {
                     ) : (
                         <div style={{ textAlign: "center", padding: "20px" }}>
                             <p>No profile found. Please create a profile.</p>
-                            <button 
+                            <button
                                 onClick={() => handleNavigate("/Profile")}
                                 style={{
                                     padding: "10px 20px",

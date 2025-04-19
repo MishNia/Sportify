@@ -10,6 +10,7 @@ import Profile from './pages/Profile'
 import GoogleCallback from './pages/GoogleCallback'
 import CreateEvent from './pages/CreateEvent'
 import MyProfile from "./pages/MyProfile";
+import EventDetails from "./pages/EventDetails";
 import './App.css';
 
 // Auth Context
@@ -30,7 +31,7 @@ function App() {
             <Route path="/Forgotpass" element={<Forgotpass />}/>
             <Route path="/Register" element={<Register />}/>
             <Route path="/auth/google/callback" element={<GoogleCallback />}/>
-
+            <Route path="/events/:eventId" element={<EventDetails />}/>
             {/* Routes that only require authentication */}
             <Route path="/Profile" element={
               <ProtectedRoute>

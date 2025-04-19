@@ -66,6 +66,25 @@ export const signupUser = async (email, password) => {
 export const loginUser = async (email, password) => {
     try {
         const response = await axios.post(`${API_BASE_URL}/auth/login`, { email, password });
+
+        // Decode the JWT token to get user ID
+        if (response.data && response.data.data) {
+            const token = response.data.data;
+            try {
+                // JWT tokens are in format: header.payload.signature
+                // We need the payload part which is the second part
+                const payload = token.split('.')[1];
+                // The payload is base64 encoded, so we need to decode it
+                const decodedPayload = JSON.parse(atob(payload));
+                // Store the user ID from the 'sub' claim
+                if (decodedPayload.sub) {
+                    localStorage.setItem('userId', decodedPayload.sub);
+                }
+            } catch (decodeError) {
+                console.error('Error decoding JWT token:', decodeError);
+            }
+        }
+
         return response.data;
     } catch (error) {
         return { error: error.response?.data?.error || "Invalid credentials" };
@@ -183,28 +202,68 @@ export const getEvents = async () => {
     }
 };
 
-// Get Event by ID
-export const getEventById = async (eventId) => {
-    return authRequest('get', `/events/${eventId}`);
+export const getEventDetails = async (eventId) => {
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8080/v1/events/${eventId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to fetch event details');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching event details:', error);
+        throw error;
+    }
 };
 
-// Update Event
-export const updateEvent = async (eventId, eventData) => {
-    return authRequest('put', `/events/${eventId}`, eventData);
-};
-
-// Delete Event
-export const deleteEvent = async (eventId) => {
-    return authRequest('delete', `/events/${eventId}`);
-};
-
-// Join Event
 export const joinEvent = async (eventId) => {
-    return authRequest('post', `/events/${eventId}/join`);
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8080/v1/events/${eventId}/join`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to join event');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error joining event:', error);
+        throw error;
+    }
 };
 
-// Leave Event
 export const leaveEvent = async (eventId) => {
-    return authRequest('post', `/events/${eventId}/leave`);
-};
+    try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`http://localhost:8080/v1/events/${eventId}/leave`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        });
 
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Failed to leave event');
+        }
+
+        return await response.json();
+    } catch (error) {
+        console.error('Error leaving event:', error);
+        throw error;
+    }
+};
