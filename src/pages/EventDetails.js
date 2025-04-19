@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getEventDetails, joinEvent, leaveEvent } from '../api';
+import ChatWindow from '../components/ChatWindow';
 import './EventDetails.css';
 
 export default function EventDetails() {
@@ -105,6 +106,8 @@ export default function EventDetails() {
                     </button>
                 )}
             </div>
+
+            <ChatWindow eventId={event.id} isParticipant={isParticipant} />
 
             {error && <div className="error-message">{error}</div>}
         </div>

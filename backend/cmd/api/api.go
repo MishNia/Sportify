@@ -4,15 +4,18 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/MishNia/Sportify.git/docs"
 	"github.com/MishNia/Sportify.git/internal/auth"
 	"github.com/MishNia/Sportify.git/internal/store"
+	"github.com/MishNia/Sportify.git/internal/websocket"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-chi/cors"
 	"github.com/go-playground/validator/v10"
+	gorilla "github.com/gorilla/websocket"
 	httpSwagger "github.com/swaggo/http-swagger"
 	"go.uber.org/zap"
 )
@@ -73,6 +76,10 @@ func (app *application) mount() http.Handler {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	// Create WebSocket hub
+	hub := websocket.NewHub()
+	go hub.Run()
+
 	r.Route("/v1", func(r chi.Router) {
 		r.Get("/health", app.healthCheckHandler)
 
@@ -110,6 +117,53 @@ func (app *application) mount() http.Handler {
 			r.Delete("/{id}", app.deleteEventHandler)
 			r.Post("/{id}/join", app.joinEventHandler)
 			r.Delete("/{id}/leave", app.leaveEventHandler)
+
+			// WebSocket endpoint for event chat
+			r.Get("/{id}/chat", func(w http.ResponseWriter, r *http.Request) {
+				eventID, err := strconv.ParseInt(chi.URLParam(r, "id"), 10, 64)
+				if err != nil {
+					app.badRequestResponse(w, r, err)
+					return
+				}
+
+				// Verify user is a participant
+				userID, _ := strconv.ParseInt(r.Context().Value("userID").(string), 10, 64)
+				event, err := app.store.Events.GetByID(r.Context(), eventID)
+				if err != nil {
+					app.internalServerError(w, r, err)
+					return
+				}
+				isParticipant := false
+				for _, p := range event.Participants {
+					if p.UserID == userID {
+						isParticipant = true
+						break
+					}
+				}
+				if !isParticipant {
+					app.forbiddenResponse(w, r)
+					return
+				}
+
+				// Get username from profile
+				profile, err := app.store.Profile.GetByEmail(r.Context(), r.Context().Value("userEmail").(string))
+				if err != nil {
+					app.internalServerError(w, r, err)
+					return
+				}
+
+				upgrader := gorilla.Upgrader{
+					ReadBufferSize:  1024,
+					WriteBufferSize: 1024,
+				}
+				conn, err := upgrader.Upgrade(w, r, nil)
+				if err != nil {
+					app.internalServerError(w, r, err)
+					return
+				}
+
+				hub.HandleWebSocket(conn, eventID, userID, profile.FirstName+" "+profile.LastName)
+			})
 		})
 	})
 
