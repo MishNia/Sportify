@@ -267,3 +267,37 @@ export const leaveEvent = async (eventId) => {
         throw error;
     }
 };
+
+export const getUserJoinedEvents = async () => {
+    try {
+        // Get the current user ID
+        const userId = parseInt(localStorage.getItem('userId'));
+        if (!userId) {
+            throw new Error('User ID not found');
+        }
+
+        // Fetch all events
+        const eventsResponse = await getEvents();
+        const allEvents = eventsResponse.data;
+
+        // Filter events where the user is a participant
+        const joinedEvents = [];
+
+        // For each event, fetch details to get participants
+        for (const event of allEvents) {
+            const eventDetails = await getEventDetails(event.id);
+            const eventData = eventDetails.data;
+
+            // Check if the user is a participant
+            if (eventData.participants &&
+                eventData.participants.some(p => p.user_id === userId)) {
+                joinedEvents.push(eventData);
+            }
+        }
+
+        return { data: joinedEvents };
+    } catch (error) {
+        console.error('Error fetching joined events:', error);
+        throw error;
+    }
+};

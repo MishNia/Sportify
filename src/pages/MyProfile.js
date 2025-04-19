@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { getUserProfile } from "../api";
+import { getUserProfile, getUserJoinedEvents, leaveEvent } from "../api";
 import "./Main.css";
 import "./MyProfile.css";
 
@@ -9,6 +9,9 @@ export default function MyProfile() {
     const [profileData, setProfileData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [joinedEvents, setJoinedEvents] = useState([]);
+    const [eventsLoading, setEventsLoading] = useState(true);
+    const [eventsError, setEventsError] = useState("");
 
     // Fetch profile data when component mounts
     useEffect(() => {
@@ -35,6 +38,37 @@ export default function MyProfile() {
 
         fetchProfile();
     }, []);
+
+    // Fetch joined events when component mounts
+    useEffect(() => {
+        const fetchJoinedEvents = async () => {
+            setEventsLoading(true);
+            try {
+                const result = await getUserJoinedEvents();
+                console.log('Joined events from API:', result);
+                setJoinedEvents(result.data || []);
+            } catch (err) {
+                console.error('Error fetching joined events:', err);
+                setEventsError('Failed to load joined events');
+            } finally {
+                setEventsLoading(false);
+            }
+        };
+
+        fetchJoinedEvents();
+    }, []);
+
+    // Handle leaving an event
+    const handleLeaveEvent = async (eventId) => {
+        try {
+            await leaveEvent(eventId);
+            // Remove the event from the list
+            setJoinedEvents(joinedEvents.filter(event => event.id !== eventId));
+        } catch (err) {
+            console.error('Error leaving event:', err);
+            alert('Failed to leave event: ' + (err.message || 'Unknown error'));
+        }
+    };
 
     // Handle navigation
     const handleNavigate = (path) => {
@@ -186,6 +220,83 @@ export default function MyProfile() {
                                         ))}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* Joined Events Section */}
+                            <div style={{ marginTop: "30px" }}>
+                                <h3>My Joined Events</h3>
+                                {eventsLoading ? (
+                                    <p>Loading your events...</p>
+                                ) : eventsError ? (
+                                    <p style={{ color: "red" }}>{eventsError}</p>
+                                ) : joinedEvents.length === 0 ? (
+                                    <p>You haven't joined any events yet.</p>
+                                ) : (
+                                    <div style={{ overflowX: "auto" }}>
+                                        <table style={{ width: "100%", borderCollapse: "collapse", marginTop: "10px" }}>
+                                            <thead>
+                                                <tr style={{ backgroundColor: "#f2f2f2" }}>
+                                                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Title</th>
+                                                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Sport</th>
+                                                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Date & Time</th>
+                                                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Location</th>
+                                                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Participants</th>
+                                                    <th style={{ padding: "12px", textAlign: "left", borderBottom: "1px solid #ddd" }}>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {joinedEvents.map(event => {
+                                                    // Format the date
+                                                    const eventDate = new Date(event.event_datetime);
+                                                    const formattedDate = eventDate.toLocaleDateString();
+                                                    const formattedTime = eventDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                                                    return (
+                                                        <tr key={event.id} style={{ borderBottom: "1px solid #ddd" }}>
+                                                            <td style={{ padding: "12px" }}>{event.title}</td>
+                                                            <td style={{ padding: "12px" }}>{event.sport}</td>
+                                                            <td style={{ padding: "12px" }}>{formattedDate} at {formattedTime}</td>
+                                                            <td style={{ padding: "12px" }}>{event.location_name}</td>
+                                                            <td style={{ padding: "12px" }}>{event.registered_count} / {event.max_players}</td>
+                                                            <td style={{ padding: "12px" }}>
+                                                                <div style={{ display: "flex", gap: "8px" }}>
+                                                                    <button
+                                                                        onClick={() => handleNavigate(`/event/${event.id}`)}
+                                                                        style={{
+                                                                            padding: "6px 12px",
+                                                                            backgroundColor: "#2196F3",
+                                                                            color: "white",
+                                                                            border: "none",
+                                                                            borderRadius: "4px",
+                                                                            cursor: "pointer",
+                                                                            fontSize: "13px"
+                                                                        }}
+                                                                    >
+                                                                        View
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleLeaveEvent(event.id)}
+                                                                        style={{
+                                                                            padding: "6px 12px",
+                                                                            backgroundColor: "#f44336",
+                                                                            color: "white",
+                                                                            border: "none",
+                                                                            borderRadius: "4px",
+                                                                            cursor: "pointer",
+                                                                            fontSize: "13px"
+                                                                        }}
+                                                                    >
+                                                                        Leave
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
                             </div>
 
                             <div style={{ marginTop: "30px", textAlign: "center" }}>

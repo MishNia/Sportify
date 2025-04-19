@@ -75,11 +75,22 @@ export default function EventDetails() {
         <div className="event-details">
             <h1>{event.title}</h1>
             <div className="event-info">
-                <p><strong>Date:</strong> {new Date(event.event_datetime).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> {new Date(event.eventDate).toLocaleTimeString()}</p>
-                <p><strong>Location:</strong> {event.locationName}</p>
-                <p><strong>Maximum Players:</strong> {event.maxPlayers}</p>
-                <p><strong>Current Participants:</strong> {event.participantCount || 0}</p>
+
+                <p>
+                    <strong>Date   & Time:</strong>{" "}
+                    {new Date(event.event_datetime).toLocaleString(undefined, {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: true   // change to false for 24‑hour clock
+                    })}
+                </p>
+
+                <p><strong>Location:</strong> {event.location_name}</p>
+                <p><strong>Maximum Players:</strong> {event.max_players}</p>
+                <p><strong>Current Participants:</strong> {event.registered_count || 0}</p>
                 <p><strong>Coordinates:</strong> {event.latitude}, {event.longitude}</p>
             </div>
 
