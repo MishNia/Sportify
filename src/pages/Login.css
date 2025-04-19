@@ -41,7 +41,8 @@
     border-radius: 8px;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
     text-align: center;
-    width: 350px;
+    max-width: 350px;
+    margin: auto;
 }
 
 .login-box h2 {
@@ -59,10 +60,11 @@
 .login-box input {
     width: 100%;
     padding: 10px;
-    margin-bottom: 15px;
+    margin: 8px 0 16px 0;
     border: 1px solid #ccc;
     border-radius: 5px;
     font-size: 16px;
+    box-sizing: border-box;
 }
 
 .login-button {
@@ -72,7 +74,7 @@
     color: white;
     border: none;
     border-radius: 5px;
-    font-size: 18px;
+    font-size: 15px;
     cursor: pointer;
     transition: 0.3s;
 }
@@ -82,7 +84,7 @@
 }
 
 .new-user, .forgot-password {
-    margin-top: 10px;
+    
     font-size: 14px;
     color: rgb(128, 128, 128);
     cursor: pointer;
@@ -90,5 +92,34 @@
 
 .new-user span, .forgot-password span {
     color: black;
-    font-weight: bold;
+    font-weight:normal;
 }
+.forgot-text:hover {
+    text-decoration: underline;
+  }
+.click-text:hover {
+    text-decoration: underline;
+}
+.forgot-password{
+    text-align: right;
+    margin-top: 0px;
+}
+.SSO-button:hover{
+    background-color: #3367d6;
+}
+
+.SSO-button {
+    padding: 10px;
+    width: 300px;
+    border-radius: 5px;
+    background-color: #4285f4;
+    color: white;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    gap: 10px;
+    transition: background-color 0.3s ease;
+  }

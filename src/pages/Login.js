@@ -63,29 +63,21 @@ export default function Login() {
                             />
 
                             {error && <p style={{ color: 'red', fontSize: '14px', marginTop: '10px' }}>{error}</p>}
-
+                            <p className="forgot-password">
+                            <span onClick={() => navigate("/forgotpass")} className="forgot-text">Forgot password?</span>
+                            </p>
                             <button type="submit" className="login-button">
-                                login
+                                Login
                             </button>
                         </form>
+                        <p style={{alignContent:"center"}}>or</p>
 
                         {/* Google Sign-In Button */}
                         <div style={{ marginTop: "20px", textAlign: "center" }}>
                             <button
+                                className="SSO-button"
                                 onClick={handleGoogleSignIn}
-                                style={{
-                                    padding: "10px",
-                                    width: "300px",
-                                    borderRadius: "5px",
-                                    backgroundColor: "#4285f4",
-                                    color: "white",
-                                    border: "none",
-                                    cursor: "pointer",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    gap: "10px",
-                                }}
+                                
                             >
                                 <img 
                                     src="https://www.google.com/favicon.ico" 
@@ -97,11 +89,9 @@ export default function Login() {
                         </div>
 
                         <p className="new-user">
-                            New user? <span onClick={() => navigate("/register")}>Click here</span>
+                            New user? <span onClick={() => navigate("/register")} className="click-text">Click here</span>
                         </p>
-                        <p className="forgot-password">
-                            <span onClick={() => navigate("/forgotpass")}>forgot password</span>
-                        </p>
+                        
                     </div>
                 </div>
             </div>
