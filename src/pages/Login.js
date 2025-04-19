@@ -16,7 +16,7 @@ export default function Login() {
         if (result.error) {
             setError(result.error);
         } else {
-            localStorage.setItem("token", result.data.token); // Save token in localStorage
+            localStorage.setItem("token", result.data); // Save token in localStorage
             alert("Login successful!");
             navigate("/profile");
         }

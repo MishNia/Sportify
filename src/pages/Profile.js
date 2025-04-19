@@ -6,7 +6,6 @@ import "./Profile.css"; // Ensure this CSS file exists
 export default function Profile() {
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
-        email: "",  // Include email for API call
         first_name: "",
         last_name: "",
         age: 0,
@@ -73,15 +72,6 @@ export default function Profile() {
 
                         {error && <p style={{ color: "red", fontSize: "14px", textAlign: "center" }}>{error}</p>}
 
-                        <label>Email</label>
-                        <input
-                            type="email"
-                            name="email"
-                            placeholder="Enter your email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            required
-                        />
 
                         <label>First Name</label>
                         <input
