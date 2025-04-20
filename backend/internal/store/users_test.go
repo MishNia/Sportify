@@ -105,17 +105,18 @@ func TestUserStore_GetByID_NotFound(t *testing.T) {
 
 // Test Get User by Email
 func TestUserStore_GetByEmail(t *testing.T) {
-	db, mock := setupMockDB(t)
+	db, mock, err := sqlmock.New()
+	assert.NoError(t, err)
 	defer db.Close()
 
 	store := &UserStore{db: db}
 	email := "test@example.com"
 
-	query := `SELECT id, email, password, created_at FROM users WHERE email = \$1`
+	query := `SELECT id, email, password, created_at, COALESCE\(google_id, ''\) FROM users WHERE email = \$1`
 	mock.ExpectQuery(query).
 		WithArgs(email).
-		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "password", "created_at"}).
-			AddRow(1, email, []byte("hashedpassword"), "2025-03-01"))
+		WillReturnRows(sqlmock.NewRows([]string{"id", "email", "password", "created_at", "google_id"}).
+			AddRow(1, email, []byte("hashedpassword"), "2025-03-01", ""))
 
 	user, err := store.GetByEmail(context.Background(), email)
 	assert.NoError(t, err)
@@ -123,6 +124,7 @@ func TestUserStore_GetByEmail(t *testing.T) {
 	assert.Equal(t, int64(1), user.ID)
 	assert.Equal(t, email, user.Email)
 	assert.Equal(t, "2025-03-01", user.CreatedAt)
+	assert.Equal(t, "", user.GoogleID)
 
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
@@ -135,7 +137,7 @@ func TestUserStore_GetByEmail_NotFound(t *testing.T) {
 	store := &UserStore{db: db}
 	email := "notfound@example.com"
 
-	mock.ExpectQuery(`SELECT id, email, password, created_at FROM users WHERE email = \$1`).
+	mock.ExpectQuery(`SELECT id, email, password, created_at, COALESCE\(google_id, ''\) FROM users WHERE email = \$1`).
 		WithArgs(email).
 		WillReturnError(sql.ErrNoRows)
 

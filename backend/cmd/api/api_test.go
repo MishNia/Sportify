@@ -142,6 +142,11 @@ func (m *mockEventStore) GetAllWithFilter(ctx context.Context, filter *store.Eve
 	return []*store.Event{}, nil
 }
 
+func (m *mockEventStore) GetAllSimple(ctx context.Context) ([]*store.Event, error) {
+	// Mock getting all events with filter
+	return []*store.Event{}, nil
+}
+
 // Mock Dependencies
 func newTestApplication() *application {
 	logger, _ := zap.NewProduction()

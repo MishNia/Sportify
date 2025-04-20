@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 
 	"golang.org/x/oauth2"
@@ -11,7 +12,14 @@ import (
 
 var (
 	googleOauthConfig *oauth2.Config
+	ErrInvalidCode   = errors.New("invalid code")
 )
+
+// GoogleUserInfoFunc is a function type for getting Google user info
+type GoogleUserInfoFunc func(code string) (*GoogleUserInfo, error)
+
+// GetGoogleUserInfo is a variable that holds the function to get Google user info
+var GetGoogleUserInfo GoogleUserInfoFunc = getGoogleUserInfo
 
 func init() {
 	googleOauthConfig = &oauth2.Config{
@@ -40,7 +48,12 @@ func GetGoogleAuthURL() string {
 	return googleOauthConfig.AuthCodeURL("state")
 }
 
-func GetGoogleUserInfo(code string) (*GoogleUserInfo, error) {
+// getGoogleUserInfo is the actual implementation of getting Google user info
+func getGoogleUserInfo(code string) (*GoogleUserInfo, error) {
+	if code == "" {
+		return nil, ErrInvalidCode
+	}
+
 	ctx := context.Background()
 	token, err := googleOauthConfig.Exchange(ctx, code)
 	if err != nil {
