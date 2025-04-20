@@ -861,6 +861,15 @@ const docTemplate = `{
                 "max_players": {
                     "type": "integer"
                 },
+                "owner_email": {
+                    "type": "string"
+                },
+                "owner_first_name": {
+                    "type": "string"
+                },
+                "owner_last_name": {
+                    "type": "string"
+                },
                 "participants": {
                     "type": "array",
                     "items": {

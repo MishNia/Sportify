@@ -28,6 +28,9 @@ type EventParticipant struct {
 type Event struct {
 	ID              int64              `json:"id"`
 	EventOwner      int64              `json:"event_owner"`
+	OwnerFirstName  string             `json:"owner_first_name"`
+	OwnerLastName   string             `json:"owner_last_name"`
+	OwnerEmail      string             `json:"owner_email"`
 	Sport           string             `json:"sport"`
 	EventDateTime   time.Time          `json:"event_datetime"`
 	MaxPlayers      int                `json:"max_players"`
@@ -144,11 +147,14 @@ func (s *EventStore) Update(ctx context.Context, event *Event) error {
 
 func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
 	query := `
-		SELECT id, event_owner, sport, event_datetime, max_players,
-		       location_name, latitude, longitude, description, title,
-		       is_full, created_at, updated_at
-		FROM events
-		WHERE id = $1`
+		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players,
+		       e.location_name, e.latitude, e.longitude, e.description, title,
+		       e.is_full, e.created_at, e.updated_at,
+		       p.first_name, p.last_name, u.email
+		FROM events e
+		JOIN users u ON e.event_owner = u.id
+		JOIN profile p ON u.email = p.email
+		WHERE e.id = $1`
 
 	event := &Event{}
 	err := s.db.QueryRowContext(ctx, query, id).Scan(
@@ -165,6 +171,9 @@ func (s *EventStore) GetByID(ctx context.Context, id int64) (*Event, error) {
 		&event.IsFull,
 		&event.CreatedAt,
 		&event.UpdatedAt,
+		&event.OwnerFirstName,
+		&event.OwnerLastName,
+		&event.OwnerEmail,
 	)
 
 	if err == sql.ErrNoRows {
@@ -455,11 +464,14 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 	query := `
 		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players, e.location_name, e.latitude, e.longitude, e.description, e.title, e.is_full, e.created_at, e.updated_at,
 		COALESCE(ep.id, 0), COALESCE(ep.user_id, 0), COALESCE(ep.joined_at, CURRENT_TIMESTAMP),
-		COALESCE(p.first_name, ''), COALESCE(p.last_name, '')
+		COALESCE(p.first_name, ''), COALESCE(p.last_name, ''),
+		owner_p.first_name, owner_p.last_name, owner_u.email
 		FROM events e
 		LEFT JOIN event_participants ep ON e.id = ep.event_id
 		LEFT JOIN users u ON ep.user_id = u.id
 		LEFT JOIN profile p ON u.email = p.email
+		JOIN users owner_u ON e.event_owner = owner_u.id
+		JOIN profile owner_p ON owner_u.email = owner_p.email
 		ORDER BY created_at DESC, e.id, ep.joined_at
 	`
 
@@ -492,6 +504,9 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 			&participant.JoinedAt,
 			&participant.FirstName,
 			&participant.LastName,
+			&event.OwnerFirstName,
+			&event.OwnerLastName,
+			&event.OwnerEmail,
 		)
 		if err != nil {
 			return nil, err
