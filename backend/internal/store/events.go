@@ -454,8 +454,8 @@ func (s *EventStore) GetAllWithFilter(ctx context.Context, filter *EventFilter) 
 func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 	query := `
 		SELECT e.id, e.event_owner, e.sport, e.event_datetime, e.max_players, e.location_name, e.latitude, e.longitude, e.description, e.title, e.is_full, e.created_at, e.updated_at,
-		ep.id, ep.user_id, ep.joined_at,
-		p.first_name, p.last_name
+		COALESCE(ep.id, 0), COALESCE(ep.user_id, 0), COALESCE(ep.joined_at, CURRENT_TIMESTAMP),
+		COALESCE(p.first_name, ''), COALESCE(p.last_name, '')
 		FROM events e
 		LEFT JOIN event_participants ep ON e.id = ep.event_id
 		LEFT JOIN users u ON ep.user_id = u.id
@@ -504,8 +504,11 @@ func (s *EventStore) GetAllSimple(ctx context.Context) ([]*Event, error) {
 			ev = &event
 		}
 
-		participant.EventID = event.ID
-		ev.Participants = append(ev.Participants, participant)
+		// Only add participant if it has a valid ID
+		if participant.ID > 0 {
+			participant.EventID = event.ID
+			ev.Participants = append(ev.Participants, participant)
+		}
 	}
 
 	var events []*Event
