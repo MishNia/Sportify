@@ -30,7 +30,7 @@ export default function Main() {
         <div style={{ flex: 2, display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }} className="flex">
           <div style={{ flex: 3, height: '100%', width: '100%' }}><button className="button" onClick={() => navigate("/Main")}>Home</button></div>
           <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => document.getElementById("contact").scrollIntoView({ behavior: "smooth" })}>Contact</button></div>
-          <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => navigate("/Login")}>Log In</button></div>
+          <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => navigate("/login")}>Log In</button></div>
           <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but4" onClick={() => navigate("/Register")}>Get Started</button></div>
         </div>
       </nav>
