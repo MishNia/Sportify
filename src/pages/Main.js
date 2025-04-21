@@ -38,55 +38,66 @@ export default function Main() {
       {/* This is the rest of the body */}
       <div style={{
         flex: 1,
-        backgroundImage: "url('/sports.jpg')",
+        backgroundImage: "linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/sports.jpg')",
         backgroundSize: "cover",
         backgroundPosition: "center",
         height: "100%",
         width: "100%",
       }}>
-        <div style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        <div className="hero-text" style={{
+          
           color: "white",
-          height: '550px',
+          height: '400px',
+          width: "1000px",
+          backgroundPosition: "center",
+
+          justifyContent: "center",
           textAlign: "center",
-          margin: "100px"
+          margin: "100px auto"
         }}>
-          <h1 style={{ fontSize: "60px", paddingTop: "30px" }}><i>SPORT!FY</i></h1>
-          <p style={{ fontSize: "30px" }}>Find Your Team, Live Your Dream! on <i>Sportify</i>.</p>
-          <p style={{ fontSize: "20px", padding: "20px 300px" }}>Find people who share your love for sports, join local events, and never miss a game again...</p>
+          <h3 style={{ fontSize: "50px" }}>Find Your Team, Live Your Dream! on <i>Sportify</i>.</h3>
+          <p style={{ fontSize: "20px", margin: "20px auto", maxWidth: "700px", padding: "0 20px" }}>Find people who share your love for sports, join local events, and never miss a game again...</p>
           <p style={{ fontSize: "20px", paddingBottom: "20px" }}>Your Team is Waiting – Join Now!</p>
-          <button id="but5" style={{ padding: "20px 100px", fontSize: "20px", cursor: "pointer" }} onClick={() => navigate("/Register")}>GET STARTED</button>
+          <button id="but5" style={{ padding: "20px 100px", fontSize: "20px", cursor: "pointer", borderRadius: "10px" }} onClick={() => navigate("/Register")}>GET STARTED</button>
         </div>
-      </div>
 
-      {/* Now put contact section here */}
-      <div id="contact" className="support-section">
-        <h2>Contact</h2>
-        <div className="divider"></div>
-        <p className="support-subtext">For more information, feel free to contact us</p>
+        {/* Now put contact section here */}
+        <div id="contact" className="support-section">
+          <h2>Contact</h2>
+          <div className="divider"></div>
+          <p className="support-subtext">For more information, feel free to contact us</p>
 
-        <div className="support-content">
-          {/* LEFT: Contact Form */}
-          <form className="support-form">
-            <input type="text" placeholder="Your Name..." required />
-            <input type="email" placeholder="Your Email..." required />
-            <textarea placeholder="Your Message..." rows="5" required></textarea>
-            <button type="submit">SEND</button>
-          </form>
+          <div className="support-content">
 
-          {/* RIGHT: Contact Info */}
-          <div className="support-info">
-            <div className="info-item">
-              <div className="icon">📧</div>
-              <a href="mailto:sonikagoud20@gmail.com">contact@sportify.com</a>
+            {/* RIGHT: Contact Info */}
+            <div className="contact-inline">
+              <div className="contact-links">
+                <div className="info-inline">
+                  <span className="icon">📧</span>
+                  <a href="mailto:sonikagoud20@gmail.com">contact@sportify.com</a>
+                </div>
+
+                <div className="info-inline">
+                  <span className="icon">🌐</span>
+                  <a href="/Main" target="_blank" rel="noopener noreferrer">www.sportify.com</a>
+                </div>
+
+                <div className="info-inline">
+                  <span className="icon">👨‍💻</span>
+                  <a href="https://github.com/MishNia/sportify" target="_blank" rel="noopener noreferrer">github.com/MishNia/sportify</a>
+                </div>
+              </div>
+              
             </div>
-            <div className="info-item">
-              <div className="icon">🌐</div>
-              <a href="/Main" target="_blank">www.sportify.com</a>
-            </div>
+            <div className="footer">
+              <p style={{ marginTop: "30px", fontSize: "14px" }}>© 2024 SPORT!FY. All rights reserved.</p>
+              <a href="https://www.eng.ufl.edu/" style={{ color: "#ccc", fontSize: "14px" }}>University of Florida’s College of Engineering website</a>
+              </div>
           </div>
         </div>
       </div>
+
+
 
     </div>
   );
