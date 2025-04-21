@@ -4,22 +4,22 @@
     height: 500px;
     display: flex;
     flex-direction: column;
-    background-color: #fff;
+    background-color: rgba(0, 0, 0, 0.2);
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     margin: 20px auto;
 }
 
 .chat-header {
     padding: 15px;
-    background-color: #f5f5f5;
+    background-color:rgba(0, 0, 0, 0.2);
     border-bottom: 1px solid #ddd;
     border-radius: 8px 8px 0 0;
 }
 
 .chat-header h3 {
     margin: 0;
-    color: #333;
+    color: #f0f0f0;
 }
 
 .chat-messages {
@@ -31,17 +31,17 @@
 .message {
     margin-bottom: 10px;
     padding: 8px 12px;
-    background-color: #f0f0f0;
+    background-color:rgba(0, 0, 0, 0.2);
     border-radius: 4px;
 }
 
 .message .username {
     font-weight: bold;
-    color: #333;
+    color: #f0f0f0;
 }
 
 .message .content {
-    color: #555;
+    color: #f0f0f0;
 }
 
 .message .timestamp {
@@ -57,11 +57,13 @@
 }
 
 .chat-input input {
+    background-color:rgba(0, 0, 0, 0.2);
     flex: 1;
     padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
     margin-right: 10px;
+    color: #f0f0f0;
 }
 
 .chat-input button {
