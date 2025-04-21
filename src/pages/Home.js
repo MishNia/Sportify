@@ -2,13 +2,16 @@ import React, { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import "./Main.css"
 import { getEvents, joinEvent } from '../api'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faMapMarkerAlt, faCalendarAlt, faUsers, faRunning } from '@fortawesome/free-solid-svg-icons';
+import './Home.css';
 
 export default function Home() {
     console.log('Home component: Mounting');
     const navigate = useNavigate();
     const [events, setEvents] = useState([]);
     const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
     const [joinedEvents, setJoinedEvents] = useState([]);
     const [initialCheckDone, setInitialCheckDone] = useState(false);
 
@@ -69,9 +72,11 @@ export default function Home() {
                 const events = eventsResponse.data;
                 console.log("Home component: Events received: ", events);
                 setEvents(events);
+                setLoading(false);
             } catch (error) {
                 console.error('Home component: Error fetching events:', error);
                 setError('Failed to load events');
+                setLoading(false);
             }
         };
 
@@ -116,6 +121,40 @@ export default function Home() {
         navigate(`/events/${eventId}`);
     };
 
+    const getInitials = (name) => {
+        return name
+            .split(' ')
+            .map(word => word[0])
+            .join('')
+            .toUpperCase();
+    };
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const getSportEmoji = (sport) => {
+        const sportEmojis = {
+            'Football': '⚽',
+            'Basketball': '🏀',
+            'Tennis': '🎾',
+            'Volleyball': '🏐',
+            'Baseball': '⚾',
+            'Badminton': '🏸',
+            'Table Tennis': '🏓',
+            'Cricket': '🏏',
+            'Rugby': '🏉',
+            'Hockey': '🏑'
+        };
+        return sportEmojis[sport] || '⚽';
+    };
+
     // Show loading indicator while initial profile check is in progress
     if (!initialCheckDone) {
         return (
@@ -143,6 +182,14 @@ export default function Home() {
         );
     }
 
+    if (loading) {
+        return <div className="loading">Loading events...</div>;
+    }
+
+    if (error) {
+        return <div className="error">{error}</div>;
+    }
+
     return (
         <div style={{
             minHeight: "100vh",
@@ -151,7 +198,7 @@ export default function Home() {
             backgroundImage: "url('/sports.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            backgroundAttachment: "fixed" // This ensures the background stays fixed while scrolling
+            backgroundAttachment: "fixed"
         }}>
             <nav style={{
                 background: 'black',
@@ -200,89 +247,61 @@ export default function Home() {
                         }}>Sign Out</button></div>
                 </div>
             </nav>
-            <div style={{
-                display: "flex",
-                flexWrap: "wrap",
-                marginLeft: "30px",
-                justifyContent:"flex-start",
-                padding: "20px 40px",
-                gap: "20px",
-                alignItems: "flex-start",
-                minHeight: "calc(100vh - 60px)" // Subtract nav height from viewport height
-            }}>
-                {/* Map through events array to display each event */}
+            <div className="event-grid">
                 {events.map((event) => (
                     <div
                         key={event.id}
-                        style={{
-                            flex: "0 1 calc(35% - 60px)",
-                            marginRight: "20px",
-                            justifyContent: "space-between",
-                            width: "800px",
-                            backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                            color: "white",
-                            height: "280px",
-                            borderRadius: "8px",
-                            display: "flex",
-                            flexDirection: "column",
-                        }}
+                        className="event-card"
                     >
-                        <div style={{ margin: "0px"}}>
-                            <div style={{ display: "flex", flexDirection: "row", backgroundColor:"black", borderRadius: "8px 8px 0 0", padding: "10px" }}>
-                            <h1 style={{ fontSize: "20px", margin: "0 0 8px 0", flex: 1 }}>{event.title}</h1>
-                            <p style={{ margin: "4px 0", fontSize: "14px", flex: 1 }}>Sport: {event.sport}</p>
+                        <div className="event-card-header">
+                            <div className="event-creator">
+                                <div className="creator-avatar-home">
+                                    {event.owner_first_name?.charAt(0).toUpperCase()}
+                                </div>
+                                <span className="creator-name-home">{event.owner_first_name + " " + event.owner_last_name}</span>
                             </div>
-                            <div style={{ padding: "10px" }}>
-                            <p style={{ margin: "10px 0", fontSize: "14px" }}>{event.description}</p>
-                            <div style={{ display: "flex", flexDirection: "row" }}>  
-                             <p style={{ margin: "4px 0", fontSize: "14px", flex: 1 }}>📍 {event.location_name}</p>
-                             <p style={{ margin: "4px 0", fontSize: "14px", flex: 1 }}>🗓 {new Date(event.event_date).toLocaleString()}</p>
-                            </div>
-                            <p style={{ paddingTop: "10px 0", fontSize: "14px" }}>Max Players: {event.max_players}</p> 
+                            <div className="participant-count">
+                                👥 {event.participants?.length || 0}/{event.max_players}
                             </div>
                         </div>
-
-                        <div style={{
-                            display: "flex",
-                            gap: "8px",
-                            margin: "0px 10px 20px 10px"
-                        }}>
+                        <div className="event-content">
+                            <h3 className="event-title">{event.title}</h3>
+                            <div className="event-info">
+                                <div className="info-row">
+                                    <div className="info-icon">
+                                        {getSportEmoji(event.sport)}
+                                    </div>
+                                    {event.sport}
+                                </div>
+                                <div className="info-row">
+                                    <div className="info-icon">📍</div>
+                                    {event.location_name}
+                                </div>
+                                <div className="info-row">
+                                    <div className="info-icon">🗓</div>
+                                    {formatDate(event.event_datetime)}
+                                </div>
+                            </div>
+                        </div>
+                        <div className="event-actions">
                             <button
+                                className="action-button join-button"
                                 onClick={() => handleJoinTeam(event.id)}
-                                disabled={loading || event.is_full || joinedEvents.includes(event.id) ||
-                                         (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))}
-                                style={{
-                                    padding: "6px 12px",
-                                    backgroundColor: event.is_full || joinedEvents.includes(event.id) ||
-                                                   (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))
-                                                   ? "#cccccc" : "#4CAF50",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: event.is_full || joinedEvents.includes(event.id) ||
-                                           (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))
-                                           ? "not-allowed" : "pointer",
-                                    flex: 1,
-                                    fontSize: "13px"
-                                }}
+                                disabled={loading || 
+                                    event.participants?.length >= event.max_players || 
+                                    joinedEvents.includes(event.id) ||
+                                    (event.participants && event.participants.some(p => 
+                                        p.user_id === parseInt(localStorage.getItem('userId'))))}
                             >
-                                {event.is_full ? "Event Full" :
-                                 joinedEvents.includes(event.id) ||
-                                 (event.participants && event.participants.some(p => p.user_id === parseInt(localStorage.getItem('userId'))))
-                                 ? "Already Joined" : "Join Team"}
+                                {event.participants?.length >= event.max_players ? "Event Full" :
+                                    joinedEvents.includes(event.id) ||
+                                    (event.participants && event.participants.some(p => 
+                                        p.user_id === parseInt(localStorage.getItem('userId'))))
+                                        ? "Already Joined" : "Join Team"}
                             </button>
                             <button
+                                className="action-button view-button"
                                 onClick={() => handleViewDetails(event.id)}
-                                style={{
-                                    padding: "6px 12px",
-                                    backgroundColor: "#2196F3",
-                                    color: "white",
-                                    border: "none",
-                                    borderRadius: "4px",
-                                    cursor: "pointer",
-                                    flex: 1,
-                                    fontSize: "13px"
-                                }}
                             >
                                 View Details
                             </button>
