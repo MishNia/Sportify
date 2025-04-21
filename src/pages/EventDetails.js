@@ -80,6 +80,54 @@ export default function EventDetails() {
     if (!event) return <div className="error">Event not found</div>;
 
     return (
+        <div>
+        <nav style={{
+                background: 'black',
+                height: '60px',
+                display: 'flex',
+                padding: '0px',
+                flexDirection: 'row'
+            }} className="navbar">
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '40%',
+                    backgroundColor: 'black',
+                }}>
+                    <img style={{ width: "50px", paddingRight: "10px" }} src="/iconmain.png" alt={"sportify"} />
+                    <p style={{
+                        margin: '0',
+                        padding: '0',
+                        color: 'white',
+                        fontSize: '40px',
+                        fontFamily: 'initial'
+                    }}>
+                        SPORT!FY
+                    </p>
+                </div>
+                <div style={{ flex: 2, display: 'flex', height: '100%', width: '100%', justifyContent: 'center', alignItems: 'center', flexDirection: 'row' }} className="flex">
+                    <div style={{ flex: 3, height: '100%', width: '100%' }}><button className="button" onClick={() => navigate("/Home")}>Home</button></div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" onClick={() => navigate("/MyProfile")}>Profile</button></div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}>
+                        <button
+                            className="button"
+                            onClick={() => navigate("/create-event")}
+                            style={{
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                padding: '0 20px'
+                            }}
+                        >
+                            +
+                        </button>
+                    </div>
+                    <div style={{ height: '100%', width: '100%', flex: 3 }}><button className="button" id="but3" onClick={() => {
+                            localStorage.removeItem("token");
+                            navigate("/login");
+                        }}>Sign Out</button></div>
+                </div>
+            </nav>
         <div className="event-details">
             <h1>{event.title}</h1>
             <div className="event-info">
@@ -117,6 +165,7 @@ export default function EventDetails() {
             <ChatWindow eventId={event.id} isParticipant={isParticipant} />
 
             {error && <div className="error-message">{error}</div>}
+        </div>
         </div>
     );
 }
