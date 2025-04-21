@@ -5,6 +5,7 @@ import "./Profile.css"; // Ensure this CSS file exists
 import { useAuth } from "../context/AuthContext";
 
 export default function Profile() {
+    console.log('Profile component: Mounting');
     const navigate = useNavigate();
     const { login } = useAuth();
     const [formData, setFormData] = useState({
@@ -35,6 +36,15 @@ export default function Profile() {
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
 
+    // Add useEffect to log when component mounts and unmounts
+    React.useEffect(() => {
+        console.log('Profile component: useEffect running');
+
+        return () => {
+            console.log('Profile component: Unmounting');
+        };
+    }, []);
+
     const sportsOptions = ["Football", "Basketball", "Tennis", "Cricket", "Soccer", "Baseball"];
 
     // Handle Input Changes
@@ -58,13 +68,18 @@ export default function Profile() {
         setError("");  // Reset previous error messages
         setLoading(true);
 
+        console.log('Profile component: Submitting profile data:', formData);
         const result = await createProfile(formData);
 
         setLoading(false);
 
         if (result.error) {
+            console.error('Profile component: Error creating profile:', result.error);
             setError(result.error);
         } else {
+            console.log('Profile component: Profile created successfully');
+            // Set the hasProfile flag in localStorage
+            localStorage.setItem('hasProfile', 'true');
             // Update auth context with the new profile
             login(localStorage.getItem("token"), { profile: result });
             alert("Profile created successfully!");

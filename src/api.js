@@ -98,7 +98,29 @@ export const createProfile = async (profileData) => {
 
 // Get User Profile
 export const getUserProfile = async () => {
-    return authRequest('get', '/profile/0');
+    try {
+        console.log('getUserProfile: Attempting to fetch user profile');
+        const result = await authRequest('get', '/profile/0');
+
+        // If we get a 404 (not found) error, it means the profile doesn't exist
+        if (result.status === 404) {
+            console.log('getUserProfile: Profile not found (404)');
+            return { error: 'Profile not found', status: 404 };
+        }
+
+        // If there's any other error, log it but don't treat it as "no profile"
+        if (result.error) {
+            console.error('getUserProfile: Error fetching profile:', result.error);
+            // Return a special flag to indicate this was a server error, not a missing profile
+            return { error: result.error, status: result.status, isServerError: true };
+        }
+
+        console.log('getUserProfile: Profile fetched successfully');
+        return result;
+    } catch (error) {
+        console.error('getUserProfile: Unexpected error:', error);
+        return { error: error.message, isServerError: true };
+    }
 };
 
 // Update User Profile

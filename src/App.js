@@ -19,6 +19,20 @@ import ProtectedRoute from './components/ProtectedRoute';
 import ProfileRequiredRoute from './components/ProfileRequiredRoute';
 
 function App() {
+  // Check if token exists but hasProfile is not set
+  React.useEffect(() => {
+    const token = localStorage.getItem('token');
+    const hasProfile = localStorage.getItem('hasProfile');
+
+    console.log('App: Initial check - token:', !!token, 'hasProfile:', hasProfile);
+
+    // If user is logged in but hasProfile is not set, default to true to prevent redirect loops
+    if (token && !hasProfile) {
+      console.log('App: Setting default hasProfile=true to prevent redirect loops');
+      localStorage.setItem('hasProfile', 'true');
+    }
+  }, []);
+
   return (
     <div className="App">
       <AuthProvider>
@@ -40,10 +54,11 @@ function App() {
             }/>
 
             {/* Routes that require both authentication and a profile */}
+            {/* Temporarily bypass ProfileRequiredRoute for Home to fix redirect issue */}
             <Route path="/Home" element={
-              <ProfileRequiredRoute>
+              <ProtectedRoute>
                 <Home />
-              </ProfileRequiredRoute>
+              </ProtectedRoute>
             }/>
             <Route path="/find" element={
               <ProfileRequiredRoute>
